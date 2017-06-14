@@ -84,11 +84,13 @@ public:
 	void addObject(ParkObject);
 	void init(float, float, float, float);
 	void create_grid(float = 0.1f);
-	static const bool useKallmann = !true;
+	vector<Agent> getAgents();
+	vector<ParkObject> getParkObjects();
+	static const bool useKallmann = true;
 	static const bool useCollision = true;
-	static const bool oneAgent = !true;
+	static const bool oneAgent = true;
 	static const bool twoAgent = !true;
-	static const bool threeAgent = true;
+	static const bool threeAgent = !true;
 	static const bool maze = !true;
 	static const bool useBird = !false;
 	static const bool stressTest = !true;

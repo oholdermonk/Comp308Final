@@ -80,3 +80,7 @@ vec2 ParkObject::rotateVec2(float x, float y, float rad) {
 void ParkObject::setRotation(float rot) {
 	rotation = rot;
 }
+
+vec2 ParkObject::getPosition() {
+	return position;
+}

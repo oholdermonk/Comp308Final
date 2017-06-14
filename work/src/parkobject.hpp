@@ -36,4 +36,5 @@ public:
 	void render();
 	void setID(int);
 	void setRotation(float);
+	cgra::vec2 getPosition();
 };

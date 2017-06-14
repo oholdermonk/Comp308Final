@@ -11,6 +11,7 @@
 #include "cgra_math.hpp"
 #include <vector>
 #include <map>
+
 using namespace cgra;
 using namespace std;
 
@@ -391,4 +392,12 @@ vector<vec2> World::aStarSearch(gridPos origin, gridPos target, int radius) {
 	free(closedSet);
 	free(gValue);
 	return vector<vec2>();
+}
+
+vector<Agent> World::getAgents() {
+	return agents;
+}
+
+vector<ParkObject> World::getParkObjects() {
+	return parkObjects;
 }
