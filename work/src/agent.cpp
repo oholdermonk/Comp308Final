@@ -22,6 +22,7 @@ string Agent::initModelFile() {
 	case human: return "";
 	case bird: return "";
 	}
+	return "";
 }
 
 float Agent::initRadius() {
@@ -29,6 +30,7 @@ float Agent::initRadius() {
 	case human: return 0.5f;
 	case bird: return 0.25f;
 	}
+	return 0.0f;
 }
 
 Agent::Agent(AgentType _agentType) {
