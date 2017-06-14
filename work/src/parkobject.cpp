@@ -40,6 +40,7 @@ vec2 ParkObject::initDimensions() {
 	case tree: return vec2(1, 1);
 	case fence: return vec2(0.1, 3);
 	}
+	return vec2(0, 0);
 }
 
 void ParkObject::render() {
