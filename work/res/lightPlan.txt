@@ -1,0 +1,12 @@
+Start with a sphere, with a spherical texture derived from position of sun in the sky.
+Nothing will run through the vertex shader. 
+On the Fragment shader
+
+
+
+
+
+
+
+Render scene and background all as one and save to a static plane in view
+Go through each step of atmosphere, acumulate mie scattering
