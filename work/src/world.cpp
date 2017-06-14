@@ -12,6 +12,8 @@
 #include <vector>
 #include <map>
 
+#define FLT_MAX          3.402823466e+38F        // max value
+
 using namespace cgra;
 using namespace std;
 
