@@ -145,6 +145,7 @@ class Tree{
 	}
 
 	public:void draw(){
+		glRotatef(90, -1, 0 , 0);
 		glTranslatef(rootXPos, rootYPos, rootZPos);
 		cgraCylinder(1,1,8,10,10,false);
 	}
