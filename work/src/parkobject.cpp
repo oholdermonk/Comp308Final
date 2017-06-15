@@ -103,7 +103,6 @@ void ParkObject::initModel() {
 	model = Geometry::getModel(filename);
 }
 
-float* ParkObject::getModel(int &size) {
-	size = sizeof(*model) / sizeof(float);
+vector<float> ParkObject::getModel() {
 	return model;
 }

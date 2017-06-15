@@ -115,7 +115,7 @@ class Tree{
 							{
 								vec3 cross = vec3((targetDir.y*xAxis.z)-(targetDir.z*xAxis.y), (targetDir.z*xAxis.x)-(targetDir.x*xAxis.z), (targetDir.x*xAxis.y)-(targetDir.y*xAxis.x)); // cross product
 							    vec3 rotAxis = normalize(cross); // normalise the cross product of the direction and staring vectors
-							    glRotatef( -rotAngle/M_PI*180, rotAxis.x, rotAxis.y, rotAxis.z ); // rotate so the bone drawsin right direction
+							    glRotatef( -rotAngle/math::pi()*180, rotAxis.x, rotAxis.y, rotAxis.z ); // rotate so the bone drawsin right direction
 							}
 					cgraSphere(1,10,10,false);
 			//glRotate(angles[i])

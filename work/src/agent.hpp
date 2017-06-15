@@ -34,7 +34,7 @@ private:
 	bool _isRandom = false;
 	std::vector<cgra::vec2> path;
 	cgra::vec2 rotateVec2(float, float, float);
-	float *model;
+	std::vector<float> model;
 	//static std::map<AgentType, float*> modelMap = std::map<AgentType, float*>();
 public:
 	Agent(AgentType);
@@ -59,6 +59,6 @@ public:
 	bool needTarget();
 	void setIsRandom(bool);
 	bool isRandom();
-	float* getModel(int &);
+	std::vector<float> getModel();
 	//static void initModelMap();
 };

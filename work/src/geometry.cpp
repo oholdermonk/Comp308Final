@@ -30,7 +30,7 @@
 using namespace std;
 using namespace cgra;
 
-float* Geometry::getModel(string filename) {
+vector<float> Geometry::getModel(string filename) {
 	std::vector<cgra::vec3> m_points;	// Point list
 	std::vector<cgra::vec2> m_uvs;		// Texture Coordinate list
 	std::vector<cgra::vec3> m_normals;	// Normal list
@@ -119,22 +119,22 @@ float* Geometry::getModel(string filename) {
 		}
 	}
 
-	float *model = new float[m_triangles.size() * 4*8];
+	vector<float> model = vector<float>();
 	int i = 0;
 	for (triangle t : m_triangles) {
 		for (vertex vert : t.v) {
 			vec3 v = m_points[vert.p];
-			*(model + (i++)) = v.x;
-			*(model + (i++)) = v.y;
-			*(model + (i++)) = v.z;
+			model.push_back(v.x);
+			model.push_back(v.y);
+			model.push_back(v.z);
 			vec3 n = m_normals[vert.n];
-			*(model + (i++)) = n.x;
-			*(model + (i++)) = n.y;
-			*(model + (i++)) = n.z;
+			model.push_back(n.x);
+			model.push_back(n.y);
+			model.push_back(n.z);
 			vec2 t = m_uvs[vert.t];
-			*(model + (i++)) = t.x;
-			*(model + (i++)) = t.y;
-		}
+			model.push_back(t.x);
+			model.push_back(t.y);
+		}	
 	}
 	return model;
 }

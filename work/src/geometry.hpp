@@ -38,5 +38,5 @@ class Geometry {
 private:
 
 public:
-	static float* getModel(std::string);
+	static std::vector<float> getModel(std::string);
 };

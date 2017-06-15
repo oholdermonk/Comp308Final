@@ -186,7 +186,6 @@ bool Agent::isRandom() {
 	return _isRandom;
 }
 
-float* Agent::getModel(int &size) {
-	size = sizeof(*model) / sizeof(float);
+vector<float> Agent::getModel() {
 	return model;
 }
