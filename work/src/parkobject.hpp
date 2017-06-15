@@ -27,8 +27,9 @@ private:
 	std::string m_filename;
 	cgra::vec2 dimensions;
 	cgra::vec2 initDimensions();
-	std::string initModelFilename;
+	void initModel();
 	cgra::vec2 rotateVec2(float, float, float);
+	float *model;
 public:
 	ParkObject(ParkObjectType, cgra::vec2);
 	GsPolygon getOutline();
@@ -37,4 +38,5 @@ public:
 	void setID(int);
 	void setRotation(float);
 	cgra::vec2 getPosition();
+	float* getModel(int &);
 };
