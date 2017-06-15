@@ -75,6 +75,7 @@ SET(sources
 	"gsim/se_triangulator_manager.cpp"
 	"gsim/se_triangulator_search.cpp"
 	"gsim/se_triangulator_tools.cpp"
+	"tree.cpp"
 )
 
 # Add executable target and link libraries
