@@ -12,17 +12,23 @@
 #include "cgra_math.hpp"
 #include "agent.hpp"
 #include "opengl.hpp"
+#include "geometry.hpp"
 
 using namespace std;
 using namespace cgra;
 using namespace math;
 
-string Agent::initModelFile() {
+void Agent::initModel() {
+	string filename;
 	switch (agentType) {
-	case human: return "";
-	case bird: return "";
+	case human: 
+		filename = "./work/res/models/lego.obj";
+		break;
+	case bird: 
+		filename =  "";
+		break;
 	}
-	return "";
+	model = Geometry::getModel(filename);
 }
 
 float Agent::initRadius() {
@@ -90,12 +96,13 @@ vec2 Agent::getTarget() {
 }
 
 void Agent::setTarget(vec2 _target) {
-	if (cgra::distance(position, target) < 0.1f) {
+	if (cgra::distance(position, _target) < 0.1f) {
 		return;
 	}
 	target = _target;
 	_needMove = true;
 	_needPath = true;
+	_needTarget = false;
 }
 
 void Agent::setPosition(vec2 _position) {
@@ -161,4 +168,24 @@ vec2 Agent::rotateVec2(float x, float y, float rad) {
 	ret.x = x*cosf(rad) - y*sinf(rad);
 	ret.y = x*sinf(rad) + y*cosf(rad);
 	return ret;
+}
+
+void Agent::setNeedTarget() {
+	_needTarget = true;
+}
+
+bool Agent::needTarget() {
+	return _needTarget;
+}
+
+void Agent::setIsRandom(bool isRandom) {
+	_isRandom = isRandom;
+}
+
+bool Agent::isRandom() {
+	return _isRandom;
+}
+
+vector<float> Agent::getModel() {
+	return model;
 }

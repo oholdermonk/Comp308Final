@@ -14,7 +14,7 @@
 #include "cgra_math.hpp"
 #include "parkobject.hpp"
 #include "opengl.hpp"
-
+#include "geometry.hpp"
 using namespace std;
 using namespace cgra;
 
@@ -23,6 +23,7 @@ ParkObject::ParkObject(ParkObjectType _parkObjectType, vec2 _position) {
 	objType = _parkObjectType;
 	dimensions = initDimensions();
 	position = _position;
+	initModel();
 }
 
 GsPolygon ParkObject::getOutline() {
@@ -84,4 +85,24 @@ void ParkObject::setRotation(float rot) {
 
 vec2 ParkObject::getPosition() {
 	return position;
+}
+
+void ParkObject::initModel() {
+	string filename;
+	switch (objType) {
+	case bench:
+		filename = "./work/res/models/Bench_LowRes.obj";
+		break;
+	case tree:
+		filename = "";
+		break;
+	case fence:
+		filename = "";
+		break;
+	}
+	model = Geometry::getModel(filename);
+}
+
+vector<float> ParkObject::getModel() {
+	return model;
 }

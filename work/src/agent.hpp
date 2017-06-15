@@ -11,7 +11,7 @@
 
 #include <string>
 #include <vector>
-
+#include <map>
 #include "cgra_math.hpp"
 #include "gsim/se_lct.h"
 
@@ -25,13 +25,17 @@ private:
 	int id;
 	AgentType agentType;
 	float radius;
-	std::string initModelFile();
+	void initModel();
 	float initRadius();
 	float rotation; // in radians
 	bool _needPath = false;
 	bool _needMove = false;
+	bool _needTarget = false;
+	bool _isRandom = false;
 	std::vector<cgra::vec2> path;
 	cgra::vec2 rotateVec2(float, float, float);
+	std::vector<float> model;
+	//static std::map<AgentType, float*> modelMap = std::map<AgentType, float*>();
 public:
 	Agent(AgentType);
 	float getRadius();
@@ -51,4 +55,10 @@ public:
 	void setPath(std::vector<cgra::vec2>);
 	cgra::vec2 getNextTarget();
 	void setNeedPath();
+	void setNeedTarget();
+	bool needTarget();
+	void setIsRandom(bool);
+	bool isRandom();
+	std::vector<float> getModel();
+	//static void initModelMap();
 };

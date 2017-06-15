@@ -14,6 +14,7 @@ SET(headers
 	"agent.hpp"
 	"world.hpp"
 	"parkobject.hpp"
+	"geometry.hpp"
 	"gsim/gs.h"
 	"gsim/gs_array.h"
 	"gsim/gs_deque.h"
@@ -48,6 +49,7 @@ SET(sources
 	"agent.cpp"
 	"world.cpp"
 	"parkobject.cpp"
+	"geometry.cpp"
 	"gsim/gs.cpp"
 	"gsim/gs_array.cpp"
 	"gsim/gs_geo2.cpp"
@@ -75,6 +77,7 @@ SET(sources
 	"gsim/se_triangulator_manager.cpp"
 	"gsim/se_triangulator_search.cpp"
 	"gsim/se_triangulator_tools.cpp"
+	"tree.cpp"
 )
 
 # Add executable target and link libraries

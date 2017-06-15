@@ -27,6 +27,25 @@ void World::render() {
 }
 
 void World::update() {
+	for (int i = 0; i < agents.size(); i++) {
+		if (agents[i].needTarget()) {
+			while (true) {
+				vec2 pos = vec2(math::random(x1, x2), math::random(y1, y2));
+				if (!useKallmann) {
+					gridPos gridPos = this->posToGrid(pos);
+					if (!grid[gridPos.y][gridPos.x]) {
+						agents[i].setTarget(pos);
+						break;
+					}
+				}
+				else {
+					agents[i].setTarget(pos);
+					break;
+				}
+
+			}
+		}
+	}
 	clock_t begin = clock();
 	useKallmann ? updateKallmann() : updateAstar();
 	clock_t end = clock();
@@ -54,7 +73,13 @@ void World::updateKallmann() {
 				//	cout << dir.x << " " << dir.y << endl;
 				agents[i].updateKallmann(vec2(dir.x, dir.y)*0.02f);
 			}
+			else {
+				agents[i].setNeedTarget();
+			}
 			agents[i].setId(TheLCT->insert_polygon(agents[i].getOutline()));
+		}
+		else {
+			agents[i].setNeedTarget();
 		}
 	}
 }
@@ -83,12 +108,15 @@ void World::updateAstar() {
 			dir = nextPos - pos;
 			//	cout << dir.x << " " << dir.y << endl;
 			if (length(dir) == 0) {
-				agents[i].setNeedPath();
+				agents[i].setNeedTarget();
 			}
 			else {
 				agents[i].update(normalize(dir)*0.02f);
 			}
 			setObstacleToGrid(agents[i].getVertices(), true);
+		}
+		else {
+			agents[i].setNeedTarget();
 		}
 	}
 }
@@ -114,6 +142,7 @@ void World::addObject(ParkObject po) {
 }
 
 void World::init(float _x1, float _y1, float _x2, float _y2) {
+
 	agents.clear();
 	parkObjects.clear();
 	x1 = _x1;
@@ -184,7 +213,7 @@ void World::init(float _x1, float _y1, float _x2, float _y2) {
 		//addAgent(a2);
 		Agent a3 = Agent(human);
 		a3.setPosition(vec2(5, 5));
-		a3.setTarget(vec2(-9,-5));
+		a3.setTarget(vec2(-9, -5));
 		addAgent(a3);
 		addObject(p1);
 	}
