@@ -31,7 +31,7 @@ void World::update() {
 	useKallmann ? updateKallmann() : updateAstar();
 	clock_t end = clock();
 	double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
-	cout << "time elapsed: " << elapsed_secs << endl;
+	//cout << "time elapsed: " << elapsed_secs << endl;
 }
 
 void World::updateKallmann() {

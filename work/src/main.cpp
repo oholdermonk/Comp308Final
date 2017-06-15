@@ -33,6 +33,7 @@ void processInput(GLFWwindow *window);
 void returnNoiseLayout();
 void renderSphere();
 void renderCube();
+void renderPlane();
 
 World *g_world = nullptr;
 //****************************************************************************************************************************
@@ -416,6 +417,8 @@ int main() {
 	pbrShader.setMat4("projection", projection);
 	backgroundShader.use();
 	backgroundShader.setMat4("projection", projection);
+	skyShader.use();
+	skyShader.setMat4("projection", projection);
 
 	// then before rendering, configure the viewport to the original framebuffer's screen dimensions
 	int scrWidth, scrHeight;
@@ -629,6 +632,7 @@ int main() {
 		model = glm::translate(model, newPos);
 		model = glm::scale(model, glm::vec3(0.5f));
 		pbrShader.setMat4("model", model);
+		
 		renderSphere();
 
 
@@ -640,19 +644,26 @@ int main() {
 		// glm::vec3 thing = glm::vec3(0.0f,0.1f,-1.0f);
 		// backgroundShader.setVec3("uSunPos",thing);
 
-		backgroundShader.use();
-		backgroundShader.setMat4("view", view);
+		skyShader.use();
+		skyShader.setMat4("view", view);
 
-		backgroundShader.setVec3("vPosition", camera.Position);
-		glm::vec3 thing = glm::vec3(0.1f, sin(glfwGetTime()), cos(glfwGetTime()));
-		backgroundShader.setVec3("uSunPos", thing);
+		skyShader.setVec3("vPosition", camera.Position);
+		glm::vec3 sunPos = glm::vec3(0.1f, sin(glfwGetTime()), cos(glfwGetTime()));
+		//glm::vec3 sunPos = glm::vec3(0.1f, 0.1f, -1.0f);
+		skyShader.setVec3("uSunPos", sunPos);
 
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
 
+
 		//glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
 		renderCube();
+
+
+		pbrShader.setMat4("projection",projection*view*model);
+		pbrShader.use();
+		renderPlane();	
 
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -660,6 +671,12 @@ int main() {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
+		cout << camera.Front.x << ", " << camera.Front.y << ", " << camera.Front.z << endl;
+
+
+		//t = distance along view direction
+		//t = (dotProd(camOrigin,)
+		//define a normal facing direction`
 
 		//glm::mat4 projection;
 		//projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
@@ -946,5 +963,45 @@ void renderCube()
 	// render Cube
 	glBindVertexArray(cubeVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
+	glBindVertexArray(0);
+}
+
+unsigned int planeVAO = 0;
+unsigned int planeVBO = 0;
+void renderPlane()
+{
+	// initialize (if necessary)
+	if (planeVAO == 0)
+	{
+		float vertices[] = {
+			    
+			// bottom face
+			-100.0f, -10.0f, -100.0f,  0.0f, -10.0f,  0.0f, 0.0f, 100.0f, // top-right
+			 100.0f, -10.0f, -100.0f,  0.0f, -10.0f,  0.0f, 100.0f, 100.0f, // top-left
+			 100.0f, -10.0f,  100.0f,  0.0f, -10.0f,  0.0f, 100.0f, 0.0f, // bottom-left
+			 100.0f, -10.0f,  100.0f,  0.0f, -10.0f,  0.0f, 100.0f, 0.0f, // bottom-left
+			-100.0f, -10.0f,  100.0f,  0.0f, -10.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+			-100.0f, -10.0f, -100.0f,  0.0f, -10.0f,  0.0f, 0.0f, 100.0f, // top-right
+			      
+		};
+		glGenVertexArrays(1, &planeVAO);
+		glGenBuffers(1, &planeVBO);
+		// fill buffer
+		glBindBuffer(GL_ARRAY_BUFFER, planeVBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+		// link vertex attributes
+		glBindVertexArray(planeVAO);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindVertexArray(0);
+	}
+	// render Cube
+	glBindVertexArray(planeVAO);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glBindVertexArray(0);
 }
