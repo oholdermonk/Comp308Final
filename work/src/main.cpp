@@ -480,46 +480,33 @@ int main() {
 
 		g_world->update();
 		glm::mat4 model;
+
+
 		vector<Agent> *agents = g_world->getAgents();
 		for (int i = 0; i < agents->size(); i++) {
 			vec2 pos = (*agents)[i].getPosition();
 			model = glm::mat4();
-			model = glm::rotate(model, degrees((*agents)[i].getRotation()), glm::vec3(0, 1, 0));
 			model = glm::translate(model, glm::vec3(
 				pos.x,
 				0.0f,
 				pos.y
 			));
+			model = glm::rotate(model, -(*agents)[i].getRotation(), glm::vec3(0, 1, 0));
 			pbrShader.setMat4("model", model);
-			//renderSphere();
-			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));
-
+			renderModel();
 		}
-
 
 		vector<ParkObject> *parkObjects = g_world->getParkObjects();
 		for (int i = 0; i < parkObjects->size(); i++) {
 			vec2 pos = (*parkObjects)[i].getPosition();
 			model = glm::mat4();
-			model = glm::rotate(model, degrees((*parkObjects)[i].getRotation()), glm::vec3(0, 1, 0));
 			model = glm::translate(model, glm::vec3(
 				pos.x,
 				0.0f,
 				pos.y
 			));
-			pbrShader.setMat4("model", model);
-			renderModel();
-		}
 
-		vector<Agent> *agentsList = g_world->getAgents();
-		for (int i = 0; i < agentsList->size(); i++) {
-			vec2 pos = (*agentsList)[i].getPosition();
-			model = glm::mat4();
-			model = glm::translate(model, glm::vec3(
-				pos.x,
-				0.0f,
-				pos.y
-			));
+			model = glm::rotate(model, -(*parkObjects)[i].getRotation(), glm::vec3(0, 1, 0));
 			pbrShader.setMat4("model", model);
 			renderModel();
 		}
