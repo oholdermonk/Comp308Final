@@ -161,7 +161,7 @@ void World::init(float _x1, float _y1, float _x2, float _y2) {
 	a2.setTarget(vec2(5, 0));
 
 	ParkObject p1 = ParkObject(bench, vec2(0, 0));
-	p1.setRotation(math::pi() / 2);
+	p1.changeRotation(math::pi() / 2);
 
 	if (oneAgent) {
 		addObject(p1);

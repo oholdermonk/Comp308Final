@@ -61,9 +61,13 @@ bool firstRun = true;
 bool animating = true;
 
 bool firstMouse = true;
-
+bool g_leftMouseDown;
+int selectedItem = -1;
+bool R_held = false;
 float sunAngle = 90;
 float sunYAngle = 0.0f;
+
+
 
 
 //****************************************************************************************************************************
@@ -105,13 +109,59 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 		firstMouse = false;
 	}
 
+
 	float xoffset = xpos - lastX;
 	float yoffset = lastY - ypos;
 	lastX = xpos;
 	lastY = ypos;
 
+	if (R_held) {
+		if (selectedItem >= g_world->getAgents().size()) {
+			g_world->getParkObjects()[selectedItem].changeRotation(xoffset);
+		}
+		return;
+	}
 
 	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void processMouseClick() {
+	// author: Jiaheng Wang
+	vec3 camPos = vec3(camera.Position.x, camera.Position.y, camera.Position.z);
+	vec3 dir = vec3(camera.Front.x, camera.Front.y, camera.Front.z);
+	vec3 tg = camPos - (camPos.y / dir.y)*dir;
+	vec2 ground = vec2(tg.x, tg.z);
+	vector<Agent> *agents = &g_world->getAgents();
+	if (selectedItem == -1 || selectedItem >= agents->size()) {
+		float smallestDist = 3.402823466e+38F;
+		for (int i = 0; i < agents->size(); i++) {
+			float dist = length(agents->at(i).getPosition() - ground);
+			if (dist < smallestDist) {
+				smallestDist = dist;
+				selectedItem = i;
+			}
+		}
+		vector<ParkObject> objs = g_world->getParkObjects();
+		for (int i = 0; i < objs.size(); i++) {
+			float dist = length(objs[i].getPosition() - ground);
+			if (dist < smallestDist) {
+				smallestDist = dist;
+				selectedItem = i + agents->size();
+			}
+		}
+	}
+	else {//agent already selected
+		agents->at(selectedItem).setTarget(ground);
+		agents->at(selectedItem).setIsRandom(false);
+	}
+
+}
+
+void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
+	// cout << "Mouse Button Callback :: button=" << button << "action=" << action << "mods=" << mods << endl;
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+		processMouseClick();
+	}
 }
 
 void setupListeners() {
@@ -121,6 +171,8 @@ void setupListeners() {
 	glfwSetCursorPosCallback(window, mouse_callback);
 	//Set up scroll listener
 	glfwSetScrollCallback(window, scroll_callback);
+
+	glfwSetMouseButtonCallback(window, mouseButtonCallback);
 }
 
 int setupMainWindow() {
@@ -263,100 +315,23 @@ int main() {
 
 		// pbr: setup framebuffer
 		// ----------------------
-	
+
 
 	g_world = new World();
 	g_world->init(-10.0f, -10.0f, 10.0f, 10.0f);
 
-	//humanModel = g_world->getAgents()[0].getModel();
-	//cout << " model size = " << humanModel.size() << endl;
+
 
 	geometryList.push_back(mesh("./work/res/models/park_bench.obj"));
 
 
 
 
-
-	// //Set up example Vertex Buffer Object of a triangle
-	// GLuint VBO;
-	// glGenBuffers(1, &VBO); 
-	// //Set up a Vertex Array Object
-	// GLuint VAO;
-	// glGenVertexArrays(1, &VAO);
-	// //Set up element array object
-	// GLuint EBO;
-	// glGenBuffers(1, &EBO);
-
-	// //Bind the VAO
-	// glBindVertexArray(VAO);
-	// //copy vertices array into a buffer for opengl to use
-	// glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	// glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	// //Copy element indices into element buffer
-	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	// glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); 
-
-	// //Set the vertex attributes pointers going to the shader
-	// //Setting the position attribute 
-	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)0);
-	// glEnableVertexAttribArray(0);
-	// //Setting the color attribute
-	// glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
-	// glEnableVertexAttribArray(1);
-	// //Setting the texture coords attribute
-	// glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(6*sizeof(GLfloat)));
-	// glEnableVertexAttribArray(2);
-
-
-
-	// //Set up cube VBO
-	// GLuint cubeVBO;
-	// glGenBuffers(1,&cubeVBO);
-	// //Set up a Vertex Array Object
-	// GLuint cubeVAO;
-	// glGenVertexArrays(1, &cubeVAO);
-	// //Set up element array object
-	// GLuint cubeEBO;
-	// glGenBuffers(1, &cubeEBO);
-	// //Bind the VAO
-	// glBindVertexArray(cubeVAO);
-	// //copy vertices array into a buffer for opengl to use
-	// glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-	// glBufferData(GL_ARRAY_BUFFER, sizeof(cube), cube, GL_STATIC_DRAW);
-	// //Copy element indices into element buffer
-	// glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeEBO);
-	// glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); 
-
-	// //Set the vertex attributes pointers going to the shader
-	// //Setting the position attribute 
-	// glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)0);
-	// glEnableVertexAttribArray(0);
-	// // //Setting the color attribute
-	// // glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
-	// // glEnableVertexAttribArray(1);
-	// //Setting the texture coords attribute
-	// glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (GLvoid*)(3*sizeof(GLfloat)));
-	// glEnableVertexAttribArray(1);
-
-	//clean up by unbinding the VAO
-	//glBindVertexArray(0);
-
-
 //****************************************************************************************************************************
 //************************************** Set Up Coordinate Systems ***********************************************************
 //****************************************************************************************************************************    
 
-	//Creating model matrix
-	// glm::mat4 model;
-	// model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));    
-
-	// //Creating view matrix
-	// glm::mat4 view;
-	// view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f)); 
-
-	// //Creating projectoion matrix
-	// glm::mat4 projection;
-	// projection = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+	
 
 
 
@@ -364,7 +339,7 @@ int main() {
 //************************************** Begin Main Loop *********************************************************************
 //****************************************************************************************************************************
 
-unsigned int captureFBO;
+	unsigned int captureFBO;
 	unsigned int captureRBO;
 	glGenFramebuffers(1, &captureFBO);
 	glGenRenderbuffers(1, &captureRBO);
@@ -375,19 +350,19 @@ unsigned int captureFBO;
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, captureRBO);
 
 	unsigned int hdrTexture;
-	
-		glGenTextures(1, &hdrTexture);
-		glBindTexture(GL_TEXTURE_2D, hdrTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, 0); // note how we specify the texture's data value to be float
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, 0);
+	glGenTextures(1, &hdrTexture);
+	glBindTexture(GL_TEXTURE_2D, hdrTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, 0); // note how we specify the texture's data value to be float
 
-		// pbr: setup cubemap to render to and attach to framebuffer
-	// ---------------------------------------------------------
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, 0);
+
+	// pbr: setup cubemap to render to and attach to framebuffer
+// ---------------------------------------------------------
 	unsigned int envCubemap;
 	glGenTextures(1, &envCubemap);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
@@ -432,25 +407,25 @@ unsigned int captureFBO;
 
 	//This is the main loop where all the action happens
 	while (!glfwWindowShouldClose(window)) {
-		
 
 
-	
 
-	
 
-		
-		if(firstRun || animating){
+
+
+
+
+		if (firstRun || animating) {
 
 
 			skyShader.use();
 			skyShader.setMat4("projection", captureProjection);
-			skyShader.setVec3("vPosition", glm::vec3(0.0f,0.0f,0.0f)); // view position
-			sunPos = glm::vec3(  0.1f,sin(glfwGetTime()/10), cos(glfwGetTime()/10));
-			
+			skyShader.setVec3("vPosition", glm::vec3(0.0f, 0.0f, 0.0f)); // view position
+			sunPos = glm::vec3(0.1f, sin(glfwGetTime() / 10), cos(glfwGetTime() / 10));
+
 			//glm::vec3 sunPos = glm::vec3(0.1f, 0.1f, -1.0f);
 			skyShader.setVec3("uSunPos", sunPos);
-			
+
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, hdrTexture);
 
@@ -467,7 +442,7 @@ unsigned int captureFBO;
 			}
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-			
+
 
 			// then before rendering, configure the viewport to the original framebuffer's screen dimensions
 			glViewport(0, 0, width, height);
@@ -498,7 +473,7 @@ unsigned int captureFBO;
 		glm::mat4 view = camera.GetViewMatrix();;
 		pbrShader.setMat4("view", view);
 		pbrShader.setVec3("camPos", camera.Position);
-		pbrShader.setVec3("albedo", glm::vec3(0.5f,0.5f,0.5f));
+		pbrShader.setVec3("albedo", glm::vec3(0.5f, 0.5f, 0.5f));
 
 		g_world->update();
 		glm::mat4 model;
@@ -550,7 +525,7 @@ unsigned int captureFBO;
 				
 			}
 		}
-		
+
 
 		//renderModel();
 		//renderCylinder(0.5,0.5,4,10,10,false);
@@ -578,7 +553,7 @@ unsigned int captureFBO;
 		// model = glm::translate(model, newPos);
 		// model = glm::scale(model, glm::vec3(0.5f));
 		// pbrShader.setMat4("model", model);
-		
+
 		// renderSphere();
 
 
@@ -609,7 +584,7 @@ unsigned int captureFBO;
 		//renderModel();
 
 
-			
+
 
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -687,9 +662,12 @@ void processInput(GLFWwindow *window)
 		sunYAngle++;
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		sunYAngle--;
-
-	if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS){
-		animating=!animating;
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+		R_held = true;
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_RELEASE)
+		R_held = false;
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+		animating = !animating;
 	}
 }
 
@@ -782,8 +760,7 @@ void renderSphere()
 			}
 		}
 
-		
-		
+
 
 		glBindVertexArray(sphereVAO);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -973,7 +950,7 @@ void renderPlane()
 	if (planeVAO == 0)
 	{
 		float vertices[] = {
-			    
+
 			// bottom face
 			-100.0f, -10.0f, -100.0f,  0.0f, -10.0f,  0.0f, 0.0f, 100.0f, // top-right
 			 100.0f, -10.0f, -100.0f,  0.0f, -10.0f,  0.0f, 100.0f, 100.0f, // top-left
@@ -981,7 +958,7 @@ void renderPlane()
 			 100.0f, -10.0f,  100.0f,  0.0f, -10.0f,  0.0f, 100.0f, 0.0f, // bottom-left
 			-100.0f, -10.0f,  100.0f,  0.0f, -10.0f,  0.0f, 0.0f, 0.0f, // bottom-right
 			-100.0f, -10.0f, -100.0f,  0.0f, -10.0f,  0.0f, 0.0f, 100.0f, // top-right
-			      
+
 		};
 		glGenVertexArrays(1, &planeVAO);
 		glGenBuffers(1, &planeVBO);
@@ -1041,7 +1018,6 @@ void renderCylinder(float base_radius, float top_radius, float height, int slice
 		}
 
 
-	
 
 		// thanks ben, you shall forever be immortalized
 		float bens_theta = math::pi() / 2 * std::atan((base_radius - top_radius) / height);

@@ -1,7 +1,7 @@
 /*
  * tree.cpp
  *
- *  Created on: 15/06/2017
+ *  Created on: 13/06/2017
  *      Author: Ashton
  */
 #include <cmath>
@@ -13,144 +13,131 @@
 #include "cgra_geometry.hpp"
 #include "cgra_math.hpp"
 #include "simple_image.hpp"
-//#include "simple_shader.hpp"
 #include "opengl.hpp"
+#include "leaf.cpp"
+#include "branch.cpp"
 
 using namespace std;
 using namespace cgra;
 
 
+class Tree {
+	public:bool finishedGrowing = false;
+	float max_dist = 150;
+	float min_dist = 10;
+	public: vector<Branch>branches = vector<Branch>();
+	public: vector<Leaf>leaves = vector<Leaf>();
 
-class Tree{
+public: Tree() {
+	for (int i = 0; i < 2000; i++) {
+		Leaf l = Leaf();
+		leaves.push_back(l);
+	}
+	Branch *root = new Branch(vec3(0, 0, 0), vec3(0, 1, 0));
+	branches.push_back(root);
+	Branch *current = new Branch(root);
 
-	int screenWidth = 600;
-	int screenHeight = 600;
+	while (!(closeEnough(current))) {
+		Branch *trunk = new Branch(current);
+		branches.push_back(trunk);
+		current = trunk;
+	}
+}
 
-	public:vector<GLfloat>xPositions;
-	private:vector<GLfloat>yPositions;
-	private:vector<GLfloat>zPositions;
-	private:vector<GLfloat>sizes;
-	private:vector<vec3>angles; // the direction vector of the branches
+public: bool closeEnough(Branch b) {
 
-	private:int rootXPos;
-	private:int rootYPos;
-	private:int rootZPos;
-
-	public:Tree(int rootX, int rootY, int rootZ){
-		rootXPos = rootX;
-		rootYPos = rootY;
-		rootZPos = rootZ;
-		createTree();
+	for (Leaf l : leaves) {
+		float d = length(l.position - b.position);
+		if (d < max_dist) {
+			return true;
+		}
 	}
 
-	public:void createTree(){
-		// clear all the vectors to ensure they are clear();
-		xPositions.clear();
-		yPositions.clear();
-		zPositions.clear();
-		sizes.clear();
-		angles.clear();
+	return false;
+}
 
-		createTree(screenWidth/2, screenHeight - 10, -20, 9 , vec3(0,1,0)); // size = (rand() % screenHeight/4) + 40
+public: void grow() {
+	for (int j = 0; j < leaves.size(); j++) {
+		int closest = -1;
+		vec3 closestDir = vec3(0, 0, 0); // a 'null' vector
+		float record = -1;
+
+		for (int i = 0; i < branches.size(); i++) {
+			vec3 dir = leaves[j].position - branches[i].position;
+			float d = length(dir);
+
+			if (d < min_dist) {
+				leaves[j].setReached();
+				closest = -1;
+				break;
+			}
+			else if (d > max_dist) {
+			}
+			else if (closest == -1 || d < record) {
+				closest = i;
+				closestDir = dir;
+				record = d;
+			}
+		}
+		if (closest > -1) {
+			closestDir = normalize(closestDir);
+			branches[closest].direction = branches[closest].direction + closestDir;
+			branches[closest].count = branches[closest].count + 1;
+		}
 	}
 
-	public:void createTree(float xPos, float yPos, float zPos, float size, vec3 angle){
-
-		if(size < 3 || yPos - size < 10){
-			//std::cout << "Return in createTree" << std::endl;
-			return;
+	for (int i = leaves.size() - 1; i >= 0; i--) {
+		if (leaves[i].reached == 1) {
+			leaves.erase(leaves.begin() + i);
 		}
-		static const int shrinkMax = 900;
-		static const int shrinkMin = 1;
-		static const int maxAngle = 45;
-		static const int maxBranches = 8;
-		static const int minBranches = 0;
-
-
-		vec3 targetDir = normalize(angle); // normalize the angle of the branch
-		vec3 axis = vec3(0,0,1); // the branch drawn if straight up
-		float rotAngle = acos((targetDir.x*axis.x) + (targetDir.y*axis.y) + (targetDir.z*axis.z)); //inverse of the dot product
-
-		vec3 curBranch = targetDir * size;
-		vec3 newPosVector = vec3(xPos, yPos, zPos) + curBranch;
-		GLfloat newXPos = newPosVector.x;
-		GLfloat newYPos = newPosVector.y;
-		GLfloat newZPos = newPosVector.z;
-
-		xPositions.push_back(xPos);
-		yPositions.push_back(yPos);
-		zPositions.push_back(zPos);
-		sizes.push_back(size);
-		angles.push_back(angle);
-
-
-		//int numOfBranches = (rand() % (maxBranches - minBranches)) - minBranches + 1; // calculates the number of branches and ensures there is at least one
-		int numOfBranches = 4;
-		for(int i = 0; i < numOfBranches; i++){
-			// create new size and angle
-			vec3 newBranchAngle =  vec3(rand() % 45, rand() % 45, rand() % 45); // find a way to make this controlled random
-			int newSize = size -1;//size * (rand() % shrinkMax + shrinkMin) / 1000.0f;
-			//recurse
-			createTree(newXPos, newYPos, newZPos, newSize, newBranchAngle);
+		if(leaves.size() == 0){
+			finishedGrowing = true;
+			std::cout << "finished growing" << std::endl;
 		}
-		//std::cout << "The create tree method ended" << std::endl;
 	}
+	for (int i = branches.size() - 1; i >= 0; i--) {
 
-	public:void drawTree(int branches){
-		//std::cout << "The draw method started" << std::endl;
-		if(branches > xPositions.size()){
-			std::cout << "There were more branches the points";
-			return;
+		if (branches[i].count > 0) {
+
+			branches[i].direction = branches[i].direction / branches[i].count;
+
+			vec3 ran = vec3::random();
+			branches[i].direction += normalize(ran)*0.3f;
+			branches[i].direction = normalize(branches[i].direction);
+			Branch newB = new Branch(branches[i]);
+			branches.push_back(newB);
+			branches[i].reset();
 		}
-		for(int i = 0; i < branches; i++){
-			glColor3f(255,255,255);
-			int branchWidth =  4;
-			float size = sizes[i]/10;
+	}
+}
+
+public: void show() {
+	for (Leaf l : leaves) {
+		l.show();
+	}
+	for (int i = 0; i < branches.size(); i++) {
+		Branch b = branches[i];
+		if (b.parent != nullptr) {
 			glPushMatrix();
-			glTranslatef(xPositions[i]/10, yPositions[i]/10, zPositions[i]/10);
-			vec3 targetDir = normalize(angles[i]); // normalize the angle of the branch
-					vec3 xAxis = vec3(1,0,0); // the branch drawn if straight up
-					float rotAngle = acos((targetDir.x*xAxis.x) + (targetDir.y*xAxis.y) + (targetDir.z*xAxis.z)); //inverse of the dot product
-					if( fabs(rotAngle) > 0)
-							{
-								vec3 cross = vec3((targetDir.y*xAxis.z)-(targetDir.z*xAxis.y), (targetDir.z*xAxis.x)-(targetDir.x*xAxis.z), (targetDir.x*xAxis.y)-(targetDir.y*xAxis.x)); // cross product
-							    vec3 rotAxis = normalize(cross); // normalise the cross product of the direction and staring vectors
-							    glRotatef( -rotAngle/math::pi()*180, rotAxis.x, rotAxis.y, rotAxis.z ); // rotate so the bone drawsin right direction
-							}
-					cgraSphere(1,10,10,false);
-			//glRotate(angles[i])
-//					std::cout << "_____________________" << std::endl;
-//					std::cout << branchWidth << std::endl;
-//				//	std::cout << size << std::cout;
-//					std::cout << "_____________________" << std::endl;
-			//cgraCylinder(0.1, 0.1, size, 10, 10, false);
-		//	std::cout << "should have drawn cylinder" << std::endl;
+
+			// ... Rotate branch
+			vec3 dir = branches[i].parent->position - branches[i].position;
+			vec3 target_dir = normalize( dir); // normalise the bones direction
+			vec3 z_axis = vec3(0,0,1); // the default direction of a bone
+			float rot_angle = acos((target_dir.x*z_axis.x) + (target_dir.y*z_axis.y) + (target_dir.z*z_axis.z)); //inverse of the dot product
+
+			glTranslatef(branches[i].position.x, branches[i].position.y, branches[i].position.z);
+
+			if( fabs(rot_angle) > 0) {
+				vec3 cross = vec3((target_dir.y*z_axis.z)-(target_dir.z*z_axis.y), (target_dir.z*z_axis.x)-(target_dir.x*z_axis.z), (target_dir.x*z_axis.y)-(target_dir.y*z_axis.x)); // cross product
+				vec3 rot_axis = normalize(cross); // normalise the cross product of the direction and staring vectors
+				glRotatef( -rot_angle/M_PI*180, rot_axis.x, rot_axis.y, rot_axis.z ); // rotate so the branch draws in right direction
+			}
+		//	renderCylinder(0.1, 0.1, branches[i].length, 6, 6, false);
+			cgraCylinder(0.1,0.1, branches[i].length, 6, 6, false);
+			glPopMatrix();
 			glPopMatrix();
 		}
-		//std::cout << "The tree finished the draw method" << std::endl;
-
-		for(int i = 0; i < branches; i++){
-			glPushMatrix();
-			std::cout << "----------------------------" << std::endl;
-			std::cout << xPositions[i] << std::endl;
-			std::cout << yPositions[i] << std::endl;
-			std::cout << zPositions[i] << std::endl;
-			std::cout << "----------------------------" << std::endl;
-
-			glTranslatef(xPositions[i], yPositions[i], zPositions[i]);
-			cgraSphere(10,10,10,false);
-			glPopMatrix();
-
-		}
 	}
-
-	public:void draw(){
-		glRotatef(90, -1, 0 , 0);
-		glTranslatef(rootXPos, rootYPos, rootZPos);
-		cgraCylinder(1,1,8,10,10,false);
-	}
-
+}
 };
-
-
-

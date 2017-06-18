@@ -79,7 +79,7 @@ vec2 ParkObject::rotateVec2(float x, float y, float rad) {
 	return ret;
 }
 
-void ParkObject::setRotation(float rot) {
+void ParkObject::changeRotation(float rot) {
 	rotation = rot;
 }
 
