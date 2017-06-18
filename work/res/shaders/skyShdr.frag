@@ -32,7 +32,7 @@ in vec3 vPosition;
 
 uniform vec3 uSunPos;
 
-
+//Ray Sphere intersection 
 vec2 rsi(vec3 r0, vec3 rd, float sr) {
     // ray-sphere intersection that assumes
     // the sphere is centered at the origin.
