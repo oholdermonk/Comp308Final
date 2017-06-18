@@ -84,8 +84,8 @@ public:
 	void addObject(ParkObject);
 	void init(float, float, float, float);
 	void create_grid(float = 0.1f);
-	vector<Agent> getAgents();
-	vector<ParkObject> getParkObjects();
+	vector<Agent>* getAgents();
+	vector<ParkObject>* getParkObjects();
 	static const bool useKallmann = true;
 	static const bool useCollision = true;
 	static const bool oneAgent = true;

@@ -42,7 +42,6 @@ void World::update() {
 					agents[i].setTarget(pos);
 					break;
 				}
-
 			}
 		}
 	}
@@ -74,12 +73,12 @@ void World::updateKallmann() {
 				agents[i].updateKallmann(vec2(dir.x, dir.y)*0.02f);
 			}
 			else {
-				agents[i].setNeedTarget();
+				if(agents[i].isRandom()) agents[i].setNeedTarget();
 			}
 			agents[i].setId(TheLCT->insert_polygon(agents[i].getOutline()));
 		}
 		else {
-			agents[i].setNeedTarget();
+			if (agents[i].isRandom()) agents[i].setNeedTarget();
 		}
 	}
 }
@@ -108,7 +107,7 @@ void World::updateAstar() {
 			dir = nextPos - pos;
 			//	cout << dir.x << " " << dir.y << endl;
 			if (length(dir) == 0) {
-				agents[i].setNeedTarget();
+				if (agents[i].isRandom()) agents[i].setNeedTarget();
 			}
 			else {
 				agents[i].update(normalize(dir)*0.02f);
@@ -116,7 +115,7 @@ void World::updateAstar() {
 			setObstacleToGrid(agents[i].getVertices(), true);
 		}
 		else {
-			agents[i].setNeedTarget();
+			if (agents[i].isRandom()) agents[i].setNeedTarget();
 		}
 	}
 }
@@ -425,10 +424,10 @@ vector<vec2> World::aStarSearch(gridPos origin, gridPos target, int radius) {
 	return vector<vec2>();
 }
 
-vector<Agent> World::getAgents() {
-	return agents;
+vector<Agent>* World::getAgents() {
+	return &agents;
 }
 
-vector<ParkObject> World::getParkObjects() {
-	return parkObjects;
+vector<ParkObject>* World::getParkObjects() {
+	return &parkObjects;
 }

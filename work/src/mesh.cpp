@@ -177,7 +177,7 @@ void mesh::readOBJ(string filename) {
 						tri.v[0] = verts[0];
 						tri.v[1] = verts[1];
 						tri.v[2] = verts[2];
-						tri.v[3] = verts[3];
+					//	tri.v[3] = verts[3];
 						m_triangles.push_back(tri);
 						//cout << "making a triangle?" << endl;
 

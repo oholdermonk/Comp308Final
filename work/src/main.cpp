@@ -118,8 +118,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 	lastY = ypos;
 
 	if (R_held) {
-		if (selectedItem >= g_world->getAgents().size()) {
-			g_world->getParkObjects()[selectedItem].changeRotation(xoffset);
+		if (selectedItem >= g_world->getAgents()->size()) {
+			g_world->getParkObjects()->at(selectedItem).changeRotation(xoffset);
 		}
 		return;
 	}
@@ -129,44 +129,44 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void processMouseClick() {
 	// author: Jiaheng Wang
-	// vec3 camPos = vec3(camera.Position.x, camera.Position.y, camera.Position.z);
-	// vec3 dir = vec3(camera.Front.x, camera.Front.y, camera.Front.z);
-	// vec3 tg = camPos - (camPos.y / dir.y)*dir;
-	// vec2 ground = vec2(tg.x, tg.z);
-	// if (addingAgent) {
-	// 	Agent a = Agent(human);
-	// 	a.setPosition(ground);
-	// 	g_world->addAgent(a);
-	// 	return;
-	// }
-	// else if (addingBench) {
-	// 	ParkObject a = ParkObject(bench, ground);
-	// 	g_world->addObject(a);
-	// 	return;
-	// }
-	// vector<Agent> *agents = &(g_world->getAgents());
-	// if (selectedItem == -1 || selectedItem >= agents->size()) {
-	// 	float smallestDist = 3.402823466e+38F;
-	// 	for (int i = 0; i < agents->size(); i++) {
-	// 		float dist = length(agents->at(i).getPosition() - ground);
-	// 		if (dist < smallestDist) {
-	// 			smallestDist = dist;
-	// 			selectedItem = i;
-	// 		}
-	// 	}
-	// 	vector<ParkObject> objs = g_world->getParkObjects();
-	// 	for (int i = 0; i < objs.size(); i++) {
-	// 		float dist = length(objs[i].getPosition() - ground);
-	// 		if (dist < smallestDist) {
-	// 			smallestDist = dist;
-	// 			selectedItem = i + agents->size();
-	// 		}
-	// 	}
-	// }
-	// else {//agent already selected
-	// 	agents->at(selectedItem).setTarget(ground);
-	// 	agents->at(selectedItem).setIsRandom(false);
-	// }
+	vec3 camPos = vec3(camera.Position.x, camera.Position.y, camera.Position.z);
+	vec3 dir = vec3(camera.Front.x, camera.Front.y, camera.Front.z);
+	vec3 tg = camPos - (camPos.y / dir.y)*dir;
+	vec2 ground = vec2(tg.x, tg.z);
+	if (addingAgent) {
+		Agent a = Agent(human);
+		a.setPosition(ground);
+		g_world->addAgent(a);
+		return;
+	}
+	else if (addingBench) {
+		ParkObject a = ParkObject(bench, ground);
+		g_world->addObject(a);
+		return;
+	}
+	vector<Agent> *agents = g_world->getAgents();
+	if (selectedItem == -1 || selectedItem >= agents->size()) {
+		float smallestDist = 3.402823466e+38F;
+		for (int i = 0; i < agents->size(); i++) {
+			float dist = length((*agents)[i].getPosition() - ground);
+			if (dist < smallestDist) {
+				smallestDist = dist;
+				selectedItem = i;
+			}
+		}
+		vector<ParkObject> *objs = g_world->getParkObjects();
+		for (int i = 0; i < objs->size(); i++) {
+			float dist = length((*objs)[i].getPosition() - ground);
+			if (dist < smallestDist) {
+				smallestDist = dist;
+				selectedItem = i + agents->size();
+			}
+		}
+	}
+	else {//agent already selected
+		(*agents)[selectedItem].setIsRandom(false);
+		(*agents)[selectedItem].setTarget(ground);
+	}
 
 }
 
@@ -325,17 +325,17 @@ int main() {
 
 
 
-//****************************************************************************************************************************
-//************************************** Set Up Coordinate Systems ***********************************************************
-//****************************************************************************************************************************    
-
-	
+	//****************************************************************************************************************************
+	//************************************** Set Up Coordinate Systems ***********************************************************
+	//****************************************************************************************************************************    
 
 
 
-//****************************************************************************************************************************
-//************************************** Begin Main Loop *********************************************************************
-//****************************************************************************************************************************
+
+
+	//****************************************************************************************************************************
+	//************************************** Begin Main Loop *********************************************************************
+	//****************************************************************************************************************************
 
 	unsigned int captureFBO;
 	unsigned int captureRBO;
@@ -397,7 +397,7 @@ int main() {
 	skyShader.use();
 	skyShader.setMat4("projection", projection);
 
-	
+
 
 
 
@@ -475,9 +475,9 @@ int main() {
 
 		g_world->update();
 		glm::mat4 model;
-		vector<Agent> agents = g_world->getAgents();
-		for (int i = 0; i < agents.size(); i++) {
-			vec2 pos = agents[i].getPosition();
+		vector<Agent> *agents = g_world->getAgents();
+		for (int i = 0; i < agents->size(); i++) {
+			vec2 pos = (*agents)[i].getPosition();
 			model = glm::mat4();
 			model = glm::translate(model, glm::vec3(
 				pos.x,
@@ -486,14 +486,14 @@ int main() {
 			));
 			pbrShader.setMat4("model", model);
 			//renderSphere();
-			model = glm::scale(model, glm::vec3(0.001f,0.001f,0.001f));
-			
-		}
-		
+			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));
 
-		vector<ParkObject> parkObjects = g_world->getParkObjects();
-		for (int i = 0; i < parkObjects.size(); i++) {
-			vec2 pos = parkObjects[i].getPosition();
+		}
+
+
+		vector<ParkObject> *parkObjects = g_world->getParkObjects();
+		for (int i = 0; i < parkObjects->size(); i++) {
+			vec2 pos = (*parkObjects)[i].getPosition();
 			model = glm::mat4();
 			model = glm::translate(model, glm::vec3(
 				pos.x,
@@ -504,9 +504,9 @@ int main() {
 			renderModel();
 		}
 
-		vector<Agent> agentsList = g_world->getAgents();
-		for (int i = 0; i < agentsList.size(); i++) {
-			vec2 pos = agentsList[i].getPosition();
+		vector<Agent> *agentsList = g_world->getAgents();
+		for (int i = 0; i < agentsList->size(); i++) {
+			vec2 pos = (*agentsList)[i].getPosition();
 			model = glm::mat4();
 			model = glm::translate(model, glm::vec3(
 				pos.x,
@@ -541,7 +541,7 @@ int main() {
 		// 		));
 		// 		pbrShader.setMat4("model", model);
 		// 		renderSphere();
-				
+
 		// 	}
 		// }
 
@@ -581,7 +581,7 @@ int main() {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
-		
+
 	}
 
 	//properly clean up the program and exit
@@ -631,13 +631,13 @@ void processInput(GLFWwindow *window)
 		addingBench = true;
 	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_RELEASE)
 		addingBench = false;
-	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_RELEASE) {
+	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
 		if (selectedItem > -1) {
-			if (selectedItem > g_world->getAgents().size()) {
-				g_world->getParkObjects().erase(g_world->getParkObjects().begin() + (selectedItem - g_world->getAgents().size()));
+			if (selectedItem >= g_world->getAgents()->size()) {
+				g_world->getParkObjects()->erase(g_world->getParkObjects()->begin() + (selectedItem - g_world->getAgents()->size()));
 			}
 			else {
-				g_world->getAgents().erase(g_world->getAgents().begin() + selectedItem);
+				g_world->getAgents()->erase(g_world->getAgents()->begin() + selectedItem);
 			}
 			selectedItem = -1;
 		}
@@ -783,24 +783,24 @@ void renderModel()
 			data.push_back(positions[i].x);
 			data.push_back(positions[i].y);
 			data.push_back(positions[i].z);
-			
-				data.push_back(normals[i].x);
-				data.push_back(normals[i].y);
-				data.push_back(normals[i].z);
-			
-				data.push_back(uv[i].x);
-				data.push_back(uv[i].y);
-			
-			
+
+			data.push_back(normals[i].x);
+			data.push_back(normals[i].y);
+			data.push_back(normals[i].z);
+
+			data.push_back(uv[i].x);
+			data.push_back(uv[i].y);
+
+
 		}
-		
-		for(triangle t : geometryList[0].m_triangles){
+
+		for (triangle t : geometryList[0].m_triangles) {
 			// cout << t.v.size() << endl;
-			for(int i=0;i<3;i++){
+			for (int i = 0; i < 3; i++) {
 				indices.push_back(t.v[i].p);
-				
+
 			}
-			
+
 		}
 
 		modelIndexCount = indices.size();
@@ -817,7 +817,7 @@ void renderModel()
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
-	
+
 	}
 
 
@@ -965,7 +965,7 @@ void renderCylinder(float base_radius, float top_radius, float height, int slice
 		std::vector<glm::vec3> normals;
 		std::vector<unsigned int> indices;
 
-		
+
 
 
 
@@ -1004,13 +1004,13 @@ void renderCylinder(float base_radius, float top_radius, float height, int slice
 				// 	cos_bens_theta * sin_phi_vector[slice_count],
 				// 	sin_bens_theta));
 
-				positions.push_back(glm::vec3(cylWidth * cos_phi_vector[slice_count],cylWidth * sin_phi_vector[slice_count],z));
-		
+				positions.push_back(glm::vec3(cylWidth * cos_phi_vector[slice_count], cylWidth * sin_phi_vector[slice_count], z));
 
-				normals.push_back(glm::vec3(cos_bens_theta * cos_phi_vector[slice_count],cos_bens_theta * sin_phi_vector[slice_count],sin_bens_theta));
-			
 
-				uv.push_back(glm::vec2(0,0));
+				normals.push_back(glm::vec3(cos_bens_theta * cos_phi_vector[slice_count], cos_bens_theta * sin_phi_vector[slice_count], sin_bens_theta));
+
+
+				uv.push_back(glm::vec2(0, 0));
 
 			}
 		}
@@ -1049,19 +1049,19 @@ void renderCylinder(float base_radius, float top_radius, float height, int slice
 			data.push_back(positions[i].x);
 			data.push_back(positions[i].y);
 			data.push_back(positions[i].z);
-			
-				data.push_back(uv[i].x);
-				data.push_back(uv[i].y);
-			
-			
-				data.push_back(normals[i].x);
-				data.push_back(normals[i].y);
-				data.push_back(normals[i].z);
-			
+
+			data.push_back(uv[i].x);
+			data.push_back(uv[i].y);
+
+
+			data.push_back(normals[i].x);
+			data.push_back(normals[i].y);
+			data.push_back(normals[i].z);
+
 		}
 
-		
-		
+
+
 
 		glBindVertexArray(cylinderVAO);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);

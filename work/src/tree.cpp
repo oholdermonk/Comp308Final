@@ -131,7 +131,7 @@ public: void show() {
 			if( fabs(rot_angle) > 0) {
 				vec3 cross = vec3((target_dir.y*z_axis.z)-(target_dir.z*z_axis.y), (target_dir.z*z_axis.x)-(target_dir.x*z_axis.z), (target_dir.x*z_axis.y)-(target_dir.y*z_axis.x)); // cross product
 				vec3 rot_axis = normalize(cross); // normalise the cross product of the direction and staring vectors
-				glRotatef( -rot_angle/M_PI*180, rot_axis.x, rot_axis.y, rot_axis.z ); // rotate so the branch draws in right direction
+				glRotatef( -rot_angle/math::pi()*180, rot_axis.x, rot_axis.y, rot_axis.z ); // rotate so the branch draws in right direction
 			}
 		//	renderCylinder(0.1, 0.1, branches[i].length, 6, 6, false);
 			cgraCylinder(0.1,0.1, branches[i].length, 6, 6, false);
