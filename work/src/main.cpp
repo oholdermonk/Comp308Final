@@ -287,21 +287,6 @@ int main() {
 
 
 
-	// Image img = Image("./work/res/textures/brick.jpg");
-
-	// GLuint texture;
-	// glGenTextures(1, &texture);
-
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-	// glBindTexture(GL_TEXTURE_2D, texture);
-
-
-
-	// glTexImage2D(GL_TEXTURE_2D, 0, img.glFormat(), img.w, img.h, 0, img.glFormat(), GL_UNSIGNED_BYTE, img.dataPointer());
-	// glGenerateMipmap(GL_TEXTURE_2D);
-
 	// lights
 	// ------
 	glm::vec3 lightPositions[] = {
@@ -570,36 +555,6 @@ int main() {
 
 
 
-
-
-		// glm::vec3 newPos = lightPositions[0] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
-		// newPos = lightPositions[0];
-		// float radius = 6.95f;
-		// float lightX = sin(glm::radians(sunAngle)) * radius;
-		// float lightY = sin(glm::radians(sunYAngle)) * radius;
-		// float lightZ = cos(glm::radians(sunAngle)) * radius;
-		// newPos = glm::vec3(lightX, lightY, lightZ);
-
-		// pbrShader.setVec3("lightPositions[" + std::to_string(0) + "]", newPos);
-		// pbrShader.setVec3("lightColors[" + std::to_string(0) + "]", lightColors[0]);
-
-		// model = glm::mat4();
-		// model = glm::translate(model, newPos);
-		// model = glm::scale(model, glm::vec3(0.5f));
-		// pbrShader.setMat4("model", model);
-
-		// renderSphere();
-
-
-
-		// render skybox (render as last to prevent overdraw)
-		// backgroundShader.use();
-		// backgroundShader.setMat4("view", view);
-
-		// backgroundShader.setVec3("vPosition",camera.Position);
-		// glm::vec3 thing = glm::vec3(0.0f,0.1f,-1.0f);
-		// backgroundShader.setVec3("uSunPos",thing);
-
 		skyShader.use();
 		skyShader.setMat4("view", view);
 
@@ -626,46 +581,9 @@ int main() {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
-		//cout << camera.Front.x << ", " << camera.Front.y << ", " << camera.Front.z << endl;
-
-
-		//t = distance along view direction
-		//t = (dotProd(camOrigin,)
-		//define a normal facing direction`
-
-		//glm::mat4 projection;
-		//projection = glm::perspective(glm::radians(camera.Zoom), (float)width / (float)height, 0.1f, 100.0f);
-
-		// pass transformation matrices to the shader
-		// primaryShader.setMat4("projection", projection); // note: currently we set the projection matrix each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
-		// primaryShader.setMat4("view", view);
-
-		// render boxes
-		// glBindVertexArray(VAO);
-		// for (unsigned int i = 0; i < 1; i++)
-		// {
-		//     // calculate the model matrix for each object and pass it to shader before drawing
-		//     glm::mat4 model;
-		//     //model = glm::translate(model, cubePositions[i]);
-		//     float angle = 20.0f * i;
-		//     //model = glm::rotate(model, glm::radians(angle)+(float)sin(glfwGetTime()), glm::vec3(1.0f, 0.3f, 0.5f));
-		//     primaryShader.setMat4("model", model);
-
-		//     glDrawArrays(GL_TRIANGLES, 3, sizeof(vertices));
-		// }
-		// //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-		// glBindVertexArray(0);
-
-
-		// //Swaps the buffers so that a full buffer can be drawn to then redisplayed, meaning no flicker
-		// glfwSwapBuffers(window);
-		// glfwPollEvents();
+		
 	}
 
-	// glDeleteVertexArrays(1, &VAO);
-	// glDeleteBuffers(1, &VBO);
-	// glDeleteBuffers(1, &EBO);
 	//properly clean up the program and exit
 	glfwTerminate();
 	return 0;
@@ -899,16 +817,7 @@ void renderModel()
 		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
-		// cout << modelVAO << endl;
-		// cout << modelVBO << endl;
-		// cout << humanModel.size()%8 << endl;
-		// for(int j = 0;j<100;j+=8){
-		// 	for(int i = 0; i < 8; i++){
-				
-		// 		cout << humanModel[j+i] << ",\t\t";  
-		// 	}
-		// 	cout << endl;
-		// }
+	
 	}
 
 
@@ -1106,34 +1015,10 @@ void renderCylinder(float base_radius, float top_radius, float height, int slice
 			}
 		}
 
-		
-
-
-
-
-
-
-
-
 
 		const unsigned int X_SEGMENTS = 128;
 		const unsigned int Y_SEGMENTS = 128;
 		const float PI = 3.14159265359;
-		// for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
-		// {
-		// 	for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
-		// 	{
-		// 		float xSegment = (float)x / (float)X_SEGMENTS;
-		// 		float ySegment = (float)y / (float)Y_SEGMENTS;
-		// 		float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
-		// 		float yPos = std::cos(ySegment * PI);
-		// 		float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
-
-		// 		positions.push_back(glm::vec3(xPos, yPos, zPos));
-		// 		uv.push_back(glm::vec2(xSegment, ySegment));
-		// 		normals.push_back(glm::vec3(xPos, yPos, zPos));
-		// 	}
-		// }
 
 		bool oddRow = false;
 		for (int y = 0; y < Y_SEGMENTS; ++y)
