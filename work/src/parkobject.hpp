@@ -39,4 +39,5 @@ public:
 	void changeRotation(float);
 	cgra::vec2 getPosition();
 	std::vector<float> getModel();
+	void setPosition(cgra::vec2);
 };

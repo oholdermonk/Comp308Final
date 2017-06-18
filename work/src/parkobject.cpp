@@ -106,3 +106,7 @@ void ParkObject::initModel() {
 vector<float> ParkObject::getModel() {
 	return model;
 }
+
+void ParkObject::setPosition(vec2 _position) {
+	position = _position;
+}

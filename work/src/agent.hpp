@@ -31,7 +31,7 @@ private:
 	bool _needPath = false;
 	bool _needMove = false;
 	bool _needTarget = false;
-	bool _isRandom = false;
+	bool _isRandom = true;
 	std::vector<cgra::vec2> path;
 	cgra::vec2 rotateVec2(float, float, float);
 	std::vector<float> model;
