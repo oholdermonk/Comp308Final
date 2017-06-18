@@ -54,9 +54,13 @@ float deltaTime = 0.0f; //Time between current frame and last frame
 float lastFrame = 0.0f;
 
 bool firstMouse = true;
-
+bool g_leftMouseDown;
+int selectedItem = -1;
+bool R_held = false;
 float sunAngle = 90;
 float sunYAngle = 0.0f;
+
+
 
 
 //****************************************************************************************************************************
@@ -170,13 +174,59 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 		firstMouse = false;
 	}
 
+
 	float xoffset = xpos - lastX;
 	float yoffset = lastY - ypos;
 	lastX = xpos;
 	lastY = ypos;
 
+	if (R_held) {
+		if (selectedItem >= g_world->getAgents().size()) {
+			g_world->getParkObjects()[selectedItem].changeRotation(xoffset);
+		}
+		return;
+	}
 
 	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+void processMouseClick() {
+	// author: Jiaheng Wang
+	vec3 camPos = vec3(camera.Position.x, camera.Position.y, camera.Position.z);
+	vec3 dir = vec3(camera.Front.x, camera.Front.y, camera.Front.z);
+	vec3 tg = camPos - (camPos.y / dir.y)*dir;
+	vec2 ground = vec2(tg.x, tg.z);
+	vector<Agent> *agents = &g_world->getAgents();
+	if (selectedItem == -1 || selectedItem >= agents->size()) {
+		float smallestDist = 3.402823466e+38F;
+		for (int i = 0; i < agents->size(); i++) {
+			float dist = length(agents->at(i).getPosition() - ground);
+			if (dist < smallestDist) {
+				smallestDist = dist;
+				selectedItem = i;
+			}
+		}
+		vector<ParkObject> objs = g_world->getParkObjects();
+		for (int i = 0; i < objs.size(); i++) {
+			float dist = length(objs[i].getPosition() - ground);
+			if (dist < smallestDist) {
+				smallestDist = dist;
+				selectedItem = i + agents->size();
+			}
+		}
+	}
+	else {//agent already selected
+		agents->at(selectedItem).setTarget(ground);
+		agents->at(selectedItem).setIsRandom(false);
+	}
+
+}
+
+void mouseButtonCallback(GLFWwindow *win, int button, int action, int mods) {
+	// cout << "Mouse Button Callback :: button=" << button << "action=" << action << "mods=" << mods << endl;
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+		processMouseClick();
+	}
 }
 
 void setupListeners() {
@@ -186,6 +236,8 @@ void setupListeners() {
 	glfwSetCursorPosCallback(window, mouse_callback);
 	//Set up scroll listener
 	glfwSetScrollCallback(window, scroll_callback);
+
+	glfwSetMouseButtonCallback(window, mouseButtonCallback);
 }
 
 int setupMainWindow() {
@@ -432,13 +484,6 @@ int main() {
 
 	humanModel = g_world->getAgents()[0].getModel();
 
-
-
-
-
-
-
-
 	// //Set up example Vertex Buffer Object of a triangle
 	// GLuint VBO;
 	// glGenBuffers(1, &VBO); 
@@ -673,7 +718,7 @@ int main() {
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 
-		cout << camera.Front.x << ", " << camera.Front.y << ", " << camera.Front.z << endl;
+		//cout << camera.Front.x << ", " << camera.Front.y << ", " << camera.Front.z << endl;
 
 
 		//t = distance along view direction
@@ -743,6 +788,10 @@ void processInput(GLFWwindow *window)
 		sunYAngle++;
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		sunYAngle--;
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+		R_held = true;
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_RELEASE)
+		R_held = false;
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
