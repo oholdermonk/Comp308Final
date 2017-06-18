@@ -36,7 +36,7 @@ public:
 	std::vector<cgra::vec2> getVertices();
 	void render();
 	void setID(int);
-	void setRotation(float);
+	void changeRotation(float);
 	cgra::vec2 getPosition();
 	std::vector<float> getModel();
 };
