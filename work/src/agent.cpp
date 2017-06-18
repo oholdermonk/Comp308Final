@@ -42,6 +42,7 @@ float Agent::initRadius() {
 Agent::Agent(AgentType _agentType) {
 	agentType = _agentType;
 	radius = initRadius();
+	initModel();
 }
 
 void Agent::update(vec2 dp) {
