@@ -64,6 +64,8 @@ bool firstMouse = true;
 bool g_leftMouseDown;
 int selectedItem = -1;
 bool R_held = false;
+bool addingAgent = false;
+bool addingBench = false;
 float sunAngle = 90;
 float sunYAngle = 0.0f;
 
@@ -131,6 +133,17 @@ void processMouseClick() {
 	vec3 dir = vec3(camera.Front.x, camera.Front.y, camera.Front.z);
 	vec3 tg = camPos - (camPos.y / dir.y)*dir;
 	vec2 ground = vec2(tg.x, tg.z);
+	if (addingAgent) {
+		Agent a = Agent(human);
+		a.setPosition(ground);
+		g_world->addAgent(a);
+		return;
+	}
+	else if (addingBench) {
+		ParkObject a = ParkObject(bench, ground);
+		g_world->addObject(a);
+		return;
+	}
 	vector<Agent> *agents = &g_world->getAgents();
 	if (selectedItem == -1 || selectedItem >= agents->size()) {
 		float smallestDist = 3.402823466e+38F;
@@ -668,6 +681,27 @@ void processInput(GLFWwindow *window)
 		R_held = false;
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 		animating = !animating;
+	}
+	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+		selectedItem = -1;
+	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+		addingAgent = true;
+	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE)
+		addingAgent = false;
+	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+		addingBench = true;
+	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_RELEASE)
+		addingBench = false;
+	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_RELEASE) {
+		if (selectedItem > -1) {
+			if (selectedItem > g_world->getAgents().size()) {
+				g_world->getParkObjects().erase(g_world->getParkObjects().begin() + (selectedItem - g_world->getAgents().size()));
+			}
+			else {
+				g_world->getAgents().erase(g_world->getAgents().begin() + selectedItem);
+			}
+			selectedItem = -1;
+		}
 	}
 }
 
