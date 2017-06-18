@@ -17,15 +17,6 @@
 using namespace cgra;
 using namespace std;
 
-void World::render() {
-	for (int i = 0; i < agents.size(); i++) {
-		agents[i].render();
-	}
-	for (int i = 0; i < parkObjects.size(); i++) {
-		parkObjects[i].render();
-	}
-}
-
 void World::update() {
 	for (int i = 0; i < agents.size(); i++) {
 		if (agents[i].needTarget()) {
@@ -130,6 +121,19 @@ void World::addAgent(Agent a) {
 	agents.push_back(a);
 }
 
+void World::removeAgent(int i)
+{
+	Agent a = agents[i];
+	agents.erase(agents.begin() + i);
+	if (useKallmann) {
+		TheLCT->remove_polygon(a.getId());
+	}
+	else {
+		setObstacleToGrid(a.getVertices(), false);
+	}
+
+}
+
 void World::addObject(ParkObject po) {
 	if (useKallmann) {
 		po.setID(TheLCT->insert_polygon(po.getOutline()));
@@ -138,6 +142,18 @@ void World::addObject(ParkObject po) {
 		setObstacleToGrid(po.getVertices(), true);
 	}
 	parkObjects.push_back(po);
+}
+
+void World::removeObject(int i)
+{
+	ParkObject a = parkObjects[i];
+	parkObjects.erase(parkObjects.begin() + i);
+	if (useKallmann) {
+		TheLCT->remove_polygon(a.getID());
+	}
+	else {
+		setObstacleToGrid(a.getVertices(), false);
+	}
 }
 
 void World::init(float _x1, float _y1, float _x2, float _y2) {

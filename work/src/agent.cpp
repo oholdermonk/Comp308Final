@@ -11,25 +11,11 @@
 
 #include "cgra_math.hpp"
 #include "agent.hpp"
-#include "opengl.hpp"
 #include "geometry.hpp"
 
 using namespace std;
 using namespace cgra;
 using namespace math;
-
-void Agent::initModel() {
-	string filename;
-	switch (agentType) {
-	case human: 
-		filename = "./work/res/models/lego.obj";
-		break;
-	case bird: 
-		filename =  "";
-		break;
-	}
-	model = Geometry::getModel(filename);
-}
 
 float Agent::initRadius() {
 	switch (agentType) {
@@ -42,7 +28,6 @@ float Agent::initRadius() {
 Agent::Agent(AgentType _agentType) {
 	agentType = _agentType;
 	radius = initRadius();
-	initModel();
 }
 
 void Agent::update(vec2 dp) {
@@ -63,33 +48,16 @@ void Agent::updateKallmann(vec2 dp) {
 	rotation = atan2f(dp.y, dp.x);
 }
 
-void Agent::render() {
-	glPushMatrix();
-	glColor3f(1, 0, 0);
-	glTranslatef(position.x, position.y, 0);
-	glRotatef(degrees(rotation), 0, 0, 1);
-	glBegin(GL_LINE_STRIP);
-	for (int i = 0; i <= 360; i+=45) {
-		glVertex3f(cosf(radians((float)i))*radius, sinf(radians((float)i))*radius,0);
-	}
-	glEnd();
-
-	glBegin(GL_QUADS);
-	glVertex3f(0.5f, 0.2f, 0);
-	glVertex3f(0.5f, -0.2f, 0);
-	glVertex3f(0.7f, -0.2f, 0);
-	glVertex3f(0.7f, 0.2f, 0);
-	glEnd();
-
-	glPopMatrix();
-}
-
 float Agent::getRadius() {
 	return radius;
 }
 
 vec2 Agent::getPosition() {
 	return position;
+}
+
+float Agent::getRotation() {
+	return rotation;
 }
 
 vec2 Agent::getTarget() {
@@ -185,8 +153,4 @@ void Agent::setIsRandom(bool isRandom) {
 
 bool Agent::isRandom() {
 	return _isRandom;
-}
-
-vector<float> Agent::getModel() {
-	return model;
 }

@@ -484,9 +484,10 @@ int main() {
 		for (int i = 0; i < agents->size(); i++) {
 			vec2 pos = (*agents)[i].getPosition();
 			model = glm::mat4();
+			model = glm::rotate(model, degrees((*agents)[i].getRotation()), glm::vec3(0, 1, 0));
 			model = glm::translate(model, glm::vec3(
 				pos.x,
-				-2.0f,
+				0.0f,
 				pos.y
 			));
 			pbrShader.setMat4("model", model);
@@ -500,6 +501,7 @@ int main() {
 		for (int i = 0; i < parkObjects->size(); i++) {
 			vec2 pos = (*parkObjects)[i].getPosition();
 			model = glm::mat4();
+			model = glm::rotate(model, degrees((*parkObjects)[i].getRotation()), glm::vec3(0, 1, 0));
 			model = glm::translate(model, glm::vec3(
 				pos.x,
 				0.0f,
@@ -627,10 +629,10 @@ void processInput(GLFWwindow *window)
 	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
 		if (selectedItem > -1) {
 			if (selectedItem >= g_world->getAgents()->size()) {
-				g_world->getParkObjects()->erase(g_world->getParkObjects()->begin() + (selectedItem - g_world->getAgents()->size()));
+				g_world->removeObject(selectedItem - g_world->getAgents()->size());
 			}
 			else {
-				g_world->getAgents()->erase(g_world->getAgents()->begin() + selectedItem);
+				g_world->removeAgent(selectedItem);
 			}
 			selectedItem = -1;
 		}
