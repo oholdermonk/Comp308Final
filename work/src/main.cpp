@@ -14,6 +14,7 @@
 #include "world.hpp"
 #include "agent.hpp"
 #include "parkobject.hpp"
+#include "mesh.hpp"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -30,14 +31,17 @@ int width, height;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
-void returnNoiseLayout();
 void renderSphere();
 void renderCube();
 void renderPlane();
+void renderModel();
+void renderCylinder(float base_radius, float top_radius, float height, int slices, int stacks, bool wire);
 
 World *g_world = nullptr;
+std::vector<mesh> geometryList;
 
-vector<float> humanModel;
+
+std::vector<float> humanModel;
 //****************************************************************************************************************************
 //************************************** Set Up Camera System ****************************************************************
 //****************************************************************************************************************************
@@ -66,81 +70,9 @@ float sunYAngle = 0.0f;
 //************************************************* OBJECTS ******************************************************************
 //****************************************************************************************************************************
 
-//Set of Triangle vertices
-// GLfloat vertices[] = {
-//     // Positions          // Colors           // Texture Coords
-//      0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right
-//      0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Bottom Right
-//     -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Bottom Left
-//     -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Top Left 
-// };
 
-glm::vec3 baseTerrain[100][100];
 
-std::vector<float> verts;
-float vertList[100 * 100 * 3 * 3];
 
-float vertices[] = {
-	-0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 0.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 1.0f,
-	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 0.0f,
-
-	-0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 0.0f,
-
-	-0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 0.0f,
-
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 0.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 0.0f,
-
-	-0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 1.0f,
-	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 1.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 0.0f,
-	 0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 1.0f,
-
-	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 1.0f,
-	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 1.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 0.0f,
-	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     1.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, 1.0f,     0.0f, 1.0f
-};
-
-glm::vec3 cubePositions[] = {
-  glm::vec3(0.0f,  0.0f,  0.0f),
-  glm::vec3(2.0f,  5.0f, -15.0f),
-  glm::vec3(-1.5f, -2.2f, -2.5f),
-  glm::vec3(-3.8f, -2.0f, -12.3f),
-  glm::vec3(2.4f, -0.4f, -3.5f),
-  glm::vec3(-1.7f,  3.0f, -7.5f),
-  glm::vec3(1.3f, -2.0f, -2.5f),
-  glm::vec3(1.5f,  2.0f, -2.5f),
-  glm::vec3(1.5f,  0.2f, -1.5f),
-  glm::vec3(-1.3f,  1.0f, -1.5f)
-};
-
-GLuint indices[] = {  // Note that we start from 0!
-	0, 1, 3,   // First Triangle
-	1, 2, 3    // Second Triangle
-};
 
 
 //****************************************************************************************************************************
@@ -243,8 +175,7 @@ int main() {
 
 	//initialise opengl
 	glfwInit();
-	returnNoiseLayout();
-
+	//
 	//****************************************************************************************************************************
 	//************************************** Initialise windows ******************************************************************
 	//****************************************************************************************************************************
@@ -283,7 +214,7 @@ int main() {
 
 	pbrShader.use();
 	pbrShader.setInt("irradianceMap", 0);
-	pbrShader.setVec3("albedo", 0.5f, 0.5f, 0.5f);
+	pbrShader.setVec3("albedo", 1.0f, 1.0f, 1.0f);
 	pbrShader.setFloat("ao", 1.0f);
 
 	backgroundShader.use();
@@ -337,10 +268,10 @@ int main() {
 	g_world = new World();
 	g_world->init(-10.0f, -10.0f, 10.0f, 10.0f);
 
-	humanModel = g_world->getAgents()[0].getModel();
-	cout << " model size = " << humanModel.size() << endl;
+	//humanModel = g_world->getAgents()[0].getModel();
+	//cout << " model size = " << humanModel.size() << endl;
 
-
+	geometryList.push_back(mesh("./work/res/models/park_bench.obj"));
 
 
 
@@ -493,6 +424,7 @@ unsigned int captureFBO;
 	skyShader.use();
 	skyShader.setMat4("projection", projection);
 
+	
 
 
 
@@ -546,7 +478,7 @@ unsigned int captureFBO;
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-		cout << deltaTime << endl;
+		//cout << deltaTime << endl;
 
 
 
@@ -580,21 +512,24 @@ unsigned int captureFBO;
 				pos.y
 			));
 			pbrShader.setMat4("model", model);
-			renderSphere();
+			//renderSphere();
+			model = glm::scale(model, glm::vec3(0.001f,0.001f,0.001f));
+			
 		}
+		
 
-		// vector<ParkObject> parkObjects = g_world->getParkObjects();
-		// for (int i = 0; i < parkObjects.size(); i++) {
-		// 	vec2 pos = parkObjects[i].getPosition();
-		// 	model = glm::mat4();
-		// 	model = glm::translate(model, glm::vec3(
-		// 		pos.x,
-		// 		-2.0f,
-		// 		pos.y
-		// 	));
-		// 	pbrShader.setMat4("model", model);
-		// 	renderSphere();
-		// }
+		vector<ParkObject> parkObjects = g_world->getParkObjects();
+		for (int i = 0; i < parkObjects.size(); i++) {
+			vec2 pos = parkObjects[i].getPosition();
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(
+				pos.x,
+				-2.0f,
+				pos.y
+			));
+			pbrShader.setMat4("model", model);
+			renderModel();
+		}
 		for (int row = 0; row < nrRows; ++row)
 		{
 			pbrShader.setFloat("metallic", (float)row / (float)nrRows);
@@ -612,11 +547,13 @@ unsigned int captureFBO;
 				));
 				pbrShader.setMat4("model", model);
 				renderSphere();
+				
 			}
 		}
 		
 
-
+		//renderModel();
+		//renderCylinder(0.5,0.5,4,10,10,false);
 
 		// render light source (simply re-render sphere at light positions)
 		// this looks a bit off as we use the same shader, but it'll make their positions obvious and 
@@ -669,6 +606,7 @@ unsigned int captureFBO;
 
 		//glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
 		renderCube();
+		//renderModel();
 
 
 			
@@ -764,48 +702,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-void returnNoiseLayout() {
-
-	for (int i = 0; i < 10; i++) {
-		for (int j = 0; j < 10; j++) {
-			//baseTerrain[j][i] = glm::vec3(i/100,j/100,(float)sin(glfwGetTime()));
-			//        (D-C)/(B-A)
-			//         (X-A)*r+C        
-			float xRatio = (2.0f) / (10.0f);
-			float mappedXVal = ((float)i)*xRatio - 1.0f;
-
-			float yRatio = (2.0f) / (10.0f);
-			float mappedYVal = ((float)j)*yRatio - 1.0f;
-
-			//baseTerrain[j][i] = glm::vec3(mappedXVal+xRatio/2.0f,mappedYVal+yRatio/2,(float)sin(glfwGetTime()));
-
-			int a = (1 + j)*(1 + i);
-			int b = (1 + j)*(1 + i) + 1;
-			int c = (1 + j)*(1 + i) + 2;
-
-			//cout << a << " " << b << " " << c << " "; 
-
-			//setting vert x, y and z
-			vertList[i + j + (i * 3)] = mappedXVal + xRatio / 2.0f;
-			vertList[i + j + 1 + (i * 3)] = mappedYVal + yRatio / 2.0f;
-			vertList[i + j + 2 + (i * 3)] = 0.0f;//(float)sin(glfwGetTime()/100);
-
-			//setting color of vert
-			// vertList[i+j+3+(i*6)] = 1.0f;
-			// vertList[i+j+4+(i*6)] = 1.0f;
-			// vertList[i+j+5+(i*6)] = 1.0f;
-
-			// verts.push_back(mappedXVal+xRatio/2.0f);
-			// verts.push_back(mappedYVal+yRatio/2.0f);
-			// verts.push_back(0.0f);
-		}
-
-	}
-
-
-	cout << verts.size();
-}
-
 // renders (and builds at first invocation) a sphere
 // -------------------------------------------------
 unsigned int sphereVAO = 0;
@@ -886,14 +782,7 @@ void renderSphere()
 			}
 		}
 
-		// cout << humanModel.size()%8 << endl;
-		// for(int j = 0;j<100;j+=8){
-		// 	for(int i = 0; i < 8; i++){
-				
-		// 		cout << humanModel[j+i] << ",\t\t";  
-		// 	}
-		// 	cout << endl;
-		// }
+		
 		
 
 		glBindVertexArray(sphereVAO);
@@ -917,6 +806,89 @@ void renderSphere()
 	//glDrawArrays(GL_QUAD_STRIP,1,10608/8);
 	glDrawElements(GL_TRIANGLE_STRIP, indexCount, GL_UNSIGNED_INT, 0);
 }
+
+
+// renders (and builds at first invocation) a sphere
+// -------------------------------------------------
+unsigned int modelVAO = 0;
+unsigned int modelIndexCount;
+void renderModel()
+{
+	if (modelVAO == 0)
+	{
+		glGenVertexArrays(1, &modelVAO);
+
+		unsigned int modelVBO, modelEBO;
+		glGenBuffers(1, &modelVBO);
+		glGenBuffers(1, &modelEBO);
+
+		std::vector<cgra::vec3> positions = geometryList[0].m_points;
+		std::vector<cgra::vec2> uv = geometryList[0].m_uvs;
+		std::vector<cgra::vec3> normals = geometryList[0].m_normals;
+		std::vector<unsigned int> indices;
+
+		std::vector<float> data;
+		for (int i = 0; i < positions.size(); i++)
+		{
+			data.push_back(positions[i].x);
+			data.push_back(positions[i].y);
+			data.push_back(positions[i].z);
+			
+				data.push_back(normals[i].x);
+				data.push_back(normals[i].y);
+				data.push_back(normals[i].z);
+			
+				data.push_back(uv[i].x);
+				data.push_back(uv[i].y);
+			
+			
+		}
+		
+		for(triangle t : geometryList[0].m_triangles){
+			// cout << t.v.size() << endl;
+			for(int i=0;i<3;i++){
+				indices.push_back(t.v[i].p);
+				
+			}
+			
+		}
+
+		modelIndexCount = indices.size();
+		cout << modelIndexCount << endl;
+		glBindVertexArray(modelVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
+		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, modelEBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, modelIndexCount * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+		float stride = (3 + 3 + 2) * sizeof(float);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
+		// cout << modelVAO << endl;
+		// cout << modelVBO << endl;
+		// cout << humanModel.size()%8 << endl;
+		// for(int j = 0;j<100;j+=8){
+		// 	for(int i = 0; i < 8; i++){
+				
+		// 		cout << humanModel[j+i] << ",\t\t";  
+		// 	}
+		// 	cout << endl;
+		// }
+	}
+
+
+
+	glBindVertexArray(modelVAO);
+	//cout << "set everything Up" << endl;
+	//glDrawArrays(GL_TRIANGLE_STRIP,0,10608);
+	//cout << modelIndexCount << endl;
+	glDrawElements(GL_TRIANGLES, modelIndexCount, GL_UNSIGNED_INT, 0);
+}
+
+
 
 // renderCube() renders a 1x1 3D cube in NDC.
 // -------------------------------------------------
@@ -1035,10 +1007,75 @@ void renderPlane()
 
 
 
+unsigned int cylinderVAO = 0;
+unsigned int cylinderIndexCount;
+void renderCylinder(float base_radius, float top_radius, float height, int slices = 10, int stacks = 10, bool wire = false)
+{
+	if (cylinderVAO == 0)
+	{
+		glGenVertexArrays(1, &cylinderVAO);
 
-void generateSkyLight(){
+		unsigned int vbo, ebo;
+		glGenBuffers(1, &vbo);
+		glGenBuffers(1, &ebo);
+
+		std::vector<glm::vec3> positions;
+		std::vector<glm::vec2> uv;
+		std::vector<glm::vec3> normals;
+		std::vector<unsigned int> indices;
+
+		
+
+
+
+
+		int dualslices = slices * 2;
+
+		std::vector<float> sin_phi_vector;
+		std::vector<float> cos_phi_vector;
+
+		for (int slice_count = 0; slice_count <= dualslices; ++slice_count) {
+			float phi = 2 * math::pi() * float(slice_count) / dualslices;
+			sin_phi_vector.push_back(std::sin(phi));
+			cos_phi_vector.push_back(std::cos(phi));
+		}
+
+
 	
 
+		// thanks ben, you shall forever be immortalized
+		float bens_theta = math::pi() / 2 * std::atan((base_radius - top_radius) / height);
+		float sin_bens_theta = std::sin(bens_theta);
+		float cos_bens_theta = std::cos(bens_theta);
+
+		for (int stack_count = 0; stack_count <= stacks; ++stack_count) {
+			float t = float(stack_count) / stacks;
+			float z = height * t;
+			float cylWidth = base_radius + (top_radius - base_radius) * t;
+
+			for (int slice_count = 0; slice_count <= dualslices; ++slice_count) {
+				// verts.push_back(vec3(
+				// 	width * cos_phi_vector[slice_count],
+				// 	width * sin_phi_vector[slice_count],
+				// 	z));
+
+				// norms.push_back(vec3(
+				// 	cos_bens_theta * cos_phi_vector[slice_count],
+				// 	cos_bens_theta * sin_phi_vector[slice_count],
+				// 	sin_bens_theta));
+
+				positions.push_back(glm::vec3(cylWidth * cos_phi_vector[slice_count],cylWidth * sin_phi_vector[slice_count],z));
+		
+
+				normals.push_back(glm::vec3(cos_bens_theta * cos_phi_vector[slice_count],cos_bens_theta * sin_phi_vector[slice_count],sin_bens_theta));
+			
+
+				uv.push_back(glm::vec2(0,0));
+
+			}
+		}
+
+		
 
 
 
@@ -1047,22 +1084,89 @@ void generateSkyLight(){
 
 
 
-	// skyShader.use();
-	// skyShader.setMat4("view", view);
 
-	// skyShader.setVec3("vPosition", camera.Position);
-	// //glm::vec3 sunPos = glm::vec3(0.1f, sin(glfwGetTime()), cos(glfwGetTime()));
-	// glm::vec3 sunPos = glm::vec3(0.1f, 0.1f, -1.0f);
-	// skyShader.setVec3("uSunPos", sunPos);
+		const unsigned int X_SEGMENTS = 128;
+		const unsigned int Y_SEGMENTS = 128;
+		const float PI = 3.14159265359;
+		// for (unsigned int y = 0; y <= Y_SEGMENTS; ++y)
+		// {
+		// 	for (unsigned int x = 0; x <= X_SEGMENTS; ++x)
+		// 	{
+		// 		float xSegment = (float)x / (float)X_SEGMENTS;
+		// 		float ySegment = (float)y / (float)Y_SEGMENTS;
+		// 		float xPos = std::cos(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
+		// 		float yPos = std::cos(ySegment * PI);
+		// 		float zPos = std::sin(xSegment * 2.0f * PI) * std::sin(ySegment * PI);
 
+		// 		positions.push_back(glm::vec3(xPos, yPos, zPos));
+		// 		uv.push_back(glm::vec2(xSegment, ySegment));
+		// 		normals.push_back(glm::vec3(xPos, yPos, zPos));
+		// 	}
+		// }
 
-	// glActiveTexture(GL_TEXTURE0);
-	// glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
+		bool oddRow = false;
+		for (int y = 0; y < Y_SEGMENTS; ++y)
+		{
+			if (!oddRow) // even rows: y == 0, y == 2; and so on
+			{
+				for (int x = 0; x <= X_SEGMENTS; ++x)
+				{
+					indices.push_back(y       * (X_SEGMENTS + 1) + x);
+					indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+				}
+			}
+			else
+			{
+				for (int x = X_SEGMENTS; x >= 0; --x)
+				{
+					indices.push_back((y + 1) * (X_SEGMENTS + 1) + x);
+					indices.push_back(y       * (X_SEGMENTS + 1) + x);
+				}
+			}
+			oddRow = !oddRow;
+		}
+		cylinderIndexCount = indices.size();
 
+		std::vector<float> data;
+		for (int i = 0; i < positions.size(); ++i)
+		{
+			data.push_back(positions[i].x);
+			data.push_back(positions[i].y);
+			data.push_back(positions[i].z);
+			
+				data.push_back(uv[i].x);
+				data.push_back(uv[i].y);
+			
+			
+				data.push_back(normals[i].x);
+				data.push_back(normals[i].y);
+				data.push_back(normals[i].z);
+			
+		}
 
-	// //glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
-	// renderCube();
+		
+		
 
+		glBindVertexArray(cylinderVAO);
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+		float stride = (3 + 2 + 3) * sizeof(float);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
+		cout << cylinderVAO << endl;
+		cout << vbo << endl;
+	}
+
+	glBindVertexArray(cylinderVAO);
+	//cout << "set everything Up" << endl;
+	//glDrawArrays(GL_QUAD_STRIP,1,10608/8);
+	glDrawElements(GL_TRIANGLE_STRIP, cylinderIndexCount, GL_UNSIGNED_INT, 0);
 }
 
 
