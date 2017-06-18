@@ -129,44 +129,44 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 void processMouseClick() {
 	// author: Jiaheng Wang
-	vec3 camPos = vec3(camera.Position.x, camera.Position.y, camera.Position.z);
-	vec3 dir = vec3(camera.Front.x, camera.Front.y, camera.Front.z);
-	vec3 tg = camPos - (camPos.y / dir.y)*dir;
-	vec2 ground = vec2(tg.x, tg.z);
-	if (addingAgent) {
-		Agent a = Agent(human);
-		a.setPosition(ground);
-		g_world->addAgent(a);
-		return;
-	}
-	else if (addingBench) {
-		ParkObject a = ParkObject(bench, ground);
-		g_world->addObject(a);
-		return;
-	}
-	vector<Agent> *agents = &g_world->getAgents();
-	if (selectedItem == -1 || selectedItem >= agents->size()) {
-		float smallestDist = 3.402823466e+38F;
-		for (int i = 0; i < agents->size(); i++) {
-			float dist = length(agents->at(i).getPosition() - ground);
-			if (dist < smallestDist) {
-				smallestDist = dist;
-				selectedItem = i;
-			}
-		}
-		vector<ParkObject> objs = g_world->getParkObjects();
-		for (int i = 0; i < objs.size(); i++) {
-			float dist = length(objs[i].getPosition() - ground);
-			if (dist < smallestDist) {
-				smallestDist = dist;
-				selectedItem = i + agents->size();
-			}
-		}
-	}
-	else {//agent already selected
-		agents->at(selectedItem).setTarget(ground);
-		agents->at(selectedItem).setIsRandom(false);
-	}
+	// vec3 camPos = vec3(camera.Position.x, camera.Position.y, camera.Position.z);
+	// vec3 dir = vec3(camera.Front.x, camera.Front.y, camera.Front.z);
+	// vec3 tg = camPos - (camPos.y / dir.y)*dir;
+	// vec2 ground = vec2(tg.x, tg.z);
+	// if (addingAgent) {
+	// 	Agent a = Agent(human);
+	// 	a.setPosition(ground);
+	// 	g_world->addAgent(a);
+	// 	return;
+	// }
+	// else if (addingBench) {
+	// 	ParkObject a = ParkObject(bench, ground);
+	// 	g_world->addObject(a);
+	// 	return;
+	// }
+	// vector<Agent> *agents = &(g_world->getAgents());
+	// if (selectedItem == -1 || selectedItem >= agents->size()) {
+	// 	float smallestDist = 3.402823466e+38F;
+	// 	for (int i = 0; i < agents->size(); i++) {
+	// 		float dist = length(agents->at(i).getPosition() - ground);
+	// 		if (dist < smallestDist) {
+	// 			smallestDist = dist;
+	// 			selectedItem = i;
+	// 		}
+	// 	}
+	// 	vector<ParkObject> objs = g_world->getParkObjects();
+	// 	for (int i = 0; i < objs.size(); i++) {
+	// 		float dist = length(objs[i].getPosition() - ground);
+	// 		if (dist < smallestDist) {
+	// 			smallestDist = dist;
+	// 			selectedItem = i + agents->size();
+	// 		}
+	// 	}
+	// }
+	// else {//agent already selected
+	// 	agents->at(selectedItem).setTarget(ground);
+	// 	agents->at(selectedItem).setIsRandom(false);
+	// }
 
 }
 
@@ -518,26 +518,47 @@ int main() {
 			pbrShader.setMat4("model", model);
 			renderModel();
 		}
-		for (int row = 0; row < nrRows; ++row)
-		{
-			pbrShader.setFloat("metallic", (float)row / (float)nrRows);
-			for (int col = 0; col < nrColumns; ++col)
-			{
-				// we clamp the roughness to 0.025 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
-				// on direct lighting.
-				pbrShader.setFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
 
-				model = glm::mat4();
-				model = glm::translate(model, glm::vec3(
-					(float)(col - (nrColumns / 2)) * spacing,
-					-2.0f,
-					(float)(row - (nrRows / 2)) * spacing
-				));
-				pbrShader.setMat4("model", model);
-				renderSphere();
-				
-			}
+		vector<Agent> agentsList = g_world->getAgents();
+		for (int i = 0; i < agentsList.size(); i++) {
+			vec2 pos = agentsList[i].getPosition();
+			model = glm::mat4();
+			model = glm::translate(model, glm::vec3(
+				pos.x,
+				1.0f,
+				pos.y
+			));
+			pbrShader.setMat4("model", model);
+			renderModel();
 		}
+
+
+
+
+
+
+
+
+		// for (int row = 0; row < nrRows; ++row)
+		// {
+		// 	pbrShader.setFloat("metallic", (float)row / (float)nrRows);
+		// 	for (int col = 0; col < nrColumns; ++col)
+		// 	{
+		// 		// we clamp the roughness to 0.025 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
+		// 		// on direct lighting.
+		// 		pbrShader.setFloat("roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
+
+		// 		model = glm::mat4();
+		// 		model = glm::translate(model, glm::vec3(
+		// 			(float)(col - (nrColumns / 2)) * spacing,
+		// 			-2.0f,
+		// 			(float)(row - (nrRows / 2)) * spacing
+		// 		));
+		// 		pbrShader.setMat4("model", model);
+		// 		renderSphere();
+				
+		// 	}
+		// }
 
 
 		//renderModel();
