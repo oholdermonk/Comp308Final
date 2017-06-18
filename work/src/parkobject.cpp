@@ -37,9 +37,9 @@ GsPolygon ParkObject::getOutline() {
 
 vec2 ParkObject::initDimensions() {
 	switch (objType) {
-	case bench: return vec2(1, 5);
-	case tree: return vec2(1, 1);
-	case fence: return vec2(0.1, 3);
+	case bench: return vec2(2.4, 1);
+	case tree: return vec2(0.5, 0.5);
+	//case fence: return vec2(0.1, 3);
 	}
 	return vec2(0, 0);
 }

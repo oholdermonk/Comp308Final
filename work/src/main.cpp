@@ -66,6 +66,7 @@ int selectedItem = -1;
 bool R_held = false;
 bool addingAgent = false;
 bool addingBench = false;
+bool addingTree = false;
 float sunAngle = 90;
 float sunYAngle = 0.0f;
 
@@ -146,7 +147,8 @@ void processMouseClick() {
 	}
 	vector<Agent> *agents = g_world->getAgents();
 	if (selectedItem == -1 || selectedItem >= agents->size()) {
-		float smallestDist = 3.402823466e+38F;
+		float maxDist = 1;
+		float smallestDist = maxDist;
 		for (int i = 0; i < agents->size(); i++) {
 			float dist = length((*agents)[i].getPosition() - ground);
 			if (dist < smallestDist) {
@@ -161,6 +163,9 @@ void processMouseClick() {
 				smallestDist = dist;
 				selectedItem = i + agents->size();
 			}
+		}
+		if (smallestDist == maxDist) {
+			selectedItem = -1;
 		}
 	}
 	else {//agent already selected
@@ -497,7 +502,7 @@ int main() {
 			model = glm::mat4();
 			model = glm::translate(model, glm::vec3(
 				pos.x,
-				-2.0f,
+				0.0f,
 				pos.y
 			));
 			pbrShader.setMat4("model", model);
@@ -510,7 +515,7 @@ int main() {
 			model = glm::mat4();
 			model = glm::translate(model, glm::vec3(
 				pos.x,
-				1.0f,
+				0.0f,
 				pos.y
 			));
 			pbrShader.setMat4("model", model);
@@ -614,23 +619,11 @@ void processInput(GLFWwindow *window)
 		sunYAngle++;
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		sunYAngle--;
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-		R_held = true;
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_RELEASE)
-		R_held = false;
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 		animating = !animating;
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
 		selectedItem = -1;
-	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-		addingAgent = true;
-	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE)
-		addingAgent = false;
-	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-		addingBench = true;
-	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_RELEASE)
-		addingBench = false;
 	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
 		if (selectedItem > -1) {
 			if (selectedItem >= g_world->getAgents()->size()) {
@@ -642,6 +635,11 @@ void processInput(GLFWwindow *window)
 			selectedItem = -1;
 		}
 	}
+
+	R_held = (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS);
+	addingAgent = (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS);
+	addingBench = (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS);
+	addingTree = (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
