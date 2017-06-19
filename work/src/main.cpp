@@ -536,7 +536,7 @@ int main() {
 		}
 		tree.show();
 
-		for (int i = 0; i < tree.branches.size(); i++) {
+		/*for (int i = 0; i < tree.branches.size(); i++) {
 			model = glm::mat4();
 			Branch b = tree.branches[i];
 		if (b.parent != nullptr) {
@@ -562,7 +562,7 @@ int main() {
 			//cgraCylinder(0.1,0.1, tree.branches[i].length, 6, 6, false);
 			
 		}
-	}
+	}*/
 
 
 
