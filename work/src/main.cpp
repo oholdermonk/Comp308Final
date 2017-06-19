@@ -15,6 +15,7 @@
 #include "agent.hpp"
 #include "parkobject.hpp"
 #include "mesh.hpp"
+#include "tree.cpp"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -34,7 +35,7 @@ void processInput(GLFWwindow *window);
 void renderSphere();
 void renderCube();
 void renderPlane();
-void renderModel();
+void renderModel(unsigned int mod);
 void renderCylinder(float base_radius, float top_radius, float height, int slices, int stacks, bool wire);
 
 World *g_world = nullptr;
@@ -330,6 +331,7 @@ int main() {
 
 
 	geometryList.push_back(mesh("./work/res/models/park_bench.obj"));
+	geometryList.push_back(mesh("./work/res/models/person.obj"));
 
 
 
@@ -408,7 +410,7 @@ int main() {
 
 
 
-
+	Tree tree = Tree();
 
 	glm::vec3 sunPos = glm::vec3(0.1f, 0.1f, -1.0f);
 
@@ -473,6 +475,7 @@ int main() {
 
 
 
+
 		//Select shader program to use
 		pbrShader.use();
 
@@ -503,7 +506,7 @@ int main() {
 				pbrShader.setVec3("albedo", glm::vec3(1, 1, 1));
 			}
 			pbrShader.setMat4("model", model);
-			renderModel();
+			renderModel(1);
 		}
 
 		vector<ParkObject> *parkObjects = g_world->getParkObjects();
@@ -523,10 +526,43 @@ int main() {
 			}
 			model = glm::rotate(model, -(*parkObjects)[i].getRotation(), glm::vec3(0, 1, 0));
 			pbrShader.setMat4("model", model);
-			renderModel();
+			renderModel(0);
 		}
 
 
+
+		if(!tree.finishedGrowing){
+			tree.grow();
+		}
+		tree.show();
+
+		for (int i = 0; i < tree.branches.size(); i++) {
+			model = glm::mat4();
+			Branch b = tree.branches[i];
+		if (b.parent != nullptr) {
+			glPushMatrix();
+
+			// ... Rotate branch
+			vec3 dir = tree.branches[i].parent->position - tree.branches[i].position;
+			vec3 target_dir = normalize( dir); // normalise the bones direction
+			vec3 z_axis = vec3(0,0,1); // the default direction of a bone
+			float rot_angle = acos((target_dir.x*z_axis.x) + (target_dir.y*z_axis.y) + (target_dir.z*z_axis.z)); //inverse of the dot product
+			model = glm::translate(model, glm::vec3(tree.branches[i].position.x, tree.branches[i].position.y, tree.branches[i].position.z));
+			//glTranslatef(tree.branches[i].position.x, tree.branches[i].position.y, tree.branches[i].position.z);
+
+			if( fabs(rot_angle) > 0) {
+				vec3 cross = vec3((target_dir.y*z_axis.z)-(target_dir.z*z_axis.y), (target_dir.z*z_axis.x)-(target_dir.x*z_axis.z), (target_dir.x*z_axis.y)-(target_dir.y*z_axis.x)); // cross product
+				vec3 rot_axis = normalize(cross); // normalise the cross product of the direction and staring vectors
+				float rotateAmount = -rot_angle;
+
+				model = glm::rotate(model, rotateAmount, glm::vec3(rot_axis.x, rot_axis.y, rot_axis.z) );
+				//glRotatef( -rot_angle/math::pi()*180, rot_axis.x, rot_axis.y, rot_axis.z ); // rotate so the branch draws in right direction
+			}
+			renderCylinder(0.1, 0.1, tree.branches[i].length, 6, 6, false);
+			//cgraCylinder(0.1,0.1, tree.branches[i].length, 6, 6, false);
+			
+		}
+	}
 
 
 
@@ -561,7 +597,10 @@ int main() {
 		// render light source (simply re-render sphere at light positions)
 		// this looks a bit off as we use the same shader, but it'll make their positions obvious and 
 		// keeps the codeprint small.
-
+		pbrShader.setVec3("albedo", glm::vec3(0.4f,0.8f,0.4f));
+		pbrShader.setFloat("metallic", 0.1f);
+		model = glm::mat4();
+		renderPlane();
 
 
 		skyShader.use();
@@ -762,21 +801,21 @@ void renderSphere()
 
 // renders (and builds at first invocation) a sphere
 // -------------------------------------------------
-unsigned int modelVAO = 0;
-unsigned int modelIndexCount;
-void renderModel()
+unsigned int modelVAO[5];
+unsigned int modelIndexCount[5];
+void renderModel(unsigned int mod)
 {
-	if (modelVAO == 0)
+	if (modelVAO[mod] == 0)
 	{
-		glGenVertexArrays(1, &modelVAO);
+		glGenVertexArrays(1, &modelVAO[mod]);
 
 		unsigned int modelVBO, modelEBO;
 		glGenBuffers(1, &modelVBO);
 		glGenBuffers(1, &modelEBO);
 
-		std::vector<cgra::vec3> positions = geometryList[0].m_points;
-		std::vector<cgra::vec2> uv = geometryList[0].m_uvs;
-		std::vector<cgra::vec3> normals = geometryList[0].m_normals;
+		std::vector<cgra::vec3> positions = geometryList[mod].m_points;
+		std::vector<cgra::vec2> uv = geometryList[mod].m_uvs;
+		std::vector<cgra::vec3> normals = geometryList[mod].m_normals;
 		std::vector<unsigned int> indices;
 
 		std::vector<float> data;
@@ -796,7 +835,7 @@ void renderModel()
 
 		}
 
-		for (triangle t : geometryList[0].m_triangles) {
+		for (triangle t : geometryList[mod].m_triangles) {
 			// cout << t.v.size() << endl;
 			for (int i = 0; i < 3; i++) {
 				indices.push_back(t.v[i].p);
@@ -805,13 +844,13 @@ void renderModel()
 
 		}
 
-		modelIndexCount = indices.size();
-		cout << modelIndexCount << endl;
-		glBindVertexArray(modelVAO);
+		modelIndexCount[mod] = indices.size();
+		cout << modelIndexCount[mod] << endl;
+		glBindVertexArray(modelVAO[mod]);
 		glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
 		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, modelEBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, modelIndexCount * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, modelIndexCount[mod] * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
 		float stride = (3 + 3 + 2) * sizeof(float);
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
@@ -824,11 +863,11 @@ void renderModel()
 
 
 
-	glBindVertexArray(modelVAO);
+	glBindVertexArray(modelVAO[mod]);
 	//cout << "set everything Up" << endl;
 	//glDrawArrays(GL_TRIANGLE_STRIP,0,10608);
-	//cout << modelIndexCount << endl;
-	glDrawElements(GL_TRIANGLES, modelIndexCount, GL_UNSIGNED_INT, 0);
+	//cout << modelIndexCount[mod] << endl;
+	glDrawElements(GL_TRIANGLES, modelIndexCount[mod], GL_UNSIGNED_INT, 0);
 }
 
 
@@ -918,12 +957,12 @@ void renderPlane()
 		float vertices[] = {
 
 			// bottom face
-			-100.0f, -10.0f, -100.0f,  0.0f, -10.0f,  0.0f, 0.0f, 100.0f, // top-right
-			 100.0f, -10.0f, -100.0f,  0.0f, -10.0f,  0.0f, 100.0f, 100.0f, // top-left
-			 100.0f, -10.0f,  100.0f,  0.0f, -10.0f,  0.0f, 100.0f, 0.0f, // bottom-left
-			 100.0f, -10.0f,  100.0f,  0.0f, -10.0f,  0.0f, 100.0f, 0.0f, // bottom-left
-			-100.0f, -10.0f,  100.0f,  0.0f, -10.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-			-100.0f, -10.0f, -100.0f,  0.0f, -10.0f,  0.0f, 0.0f, 100.0f, // top-right
+			-10000.0f, -1.0f, -1000.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+			 10000.0f, -1.0f, -1000.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+			 10000.0f, -1.0f,  1000.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+			 10000.0f, -1.0f,  1000.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+			-10000.0f, -1.0f,  1000.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+			-10000.0f, -1.0f, -1000.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
 
 		};
 		glGenVertexArrays(1, &planeVAO);
