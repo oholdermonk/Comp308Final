@@ -145,6 +145,10 @@ void processMouseClick() {
 		g_world->addObject(a);
 		return;
 	}
+	else if (addingTree) {
+
+		return;
+	}
 	vector<Agent> *agents = g_world->getAgents();
 	if (selectedItem == -1 || selectedItem >= agents->size()) {
 		float maxDist = 1;
@@ -492,6 +496,12 @@ int main() {
 				pos.y
 			));
 			model = glm::rotate(model, -(*agents)[i].getRotation(), glm::vec3(0, 1, 0));
+			if (i == selectedItem) {
+				pbrShader.setVec3("albedo", glm::vec3(1, 0, 0));
+			}
+			else {
+				pbrShader.setVec3("albedo", glm::vec3(1, 1, 1));
+			}
 			pbrShader.setMat4("model", model);
 			renderModel();
 		}
@@ -505,7 +515,12 @@ int main() {
 				0.0f,
 				pos.y
 			));
-
+			if (i+agents->size() == selectedItem) {
+				pbrShader.setVec3("albedo", glm::vec3(1, 0, 0));
+			}
+			else {
+				pbrShader.setVec3("albedo", glm::vec3(1, 1, 1));
+			}
 			model = glm::rotate(model, -(*parkObjects)[i].getRotation(), glm::vec3(0, 1, 0));
 			pbrShader.setMat4("model", model);
 			renderModel();
