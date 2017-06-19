@@ -19,7 +19,7 @@ using namespace math;
 
 float Agent::initRadius() {
 	switch (agentType) {
-	case human: return 0.5f;
+	case human: return 0.6f;
 	case bird: return 0.25f;
 	}
 	return 0.0f;
