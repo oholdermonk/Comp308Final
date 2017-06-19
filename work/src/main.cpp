@@ -121,7 +121,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 	if (R_held) {
 		if (selectedItem >= g_world->getAgents()->size()) {
-			g_world->getParkObjects()->at(selectedItem).changeRotation(xoffset);
+			g_world->getParkObjects()->at(selectedItem- g_world->getAgents()->size()).changeRotation(xoffset);
 		}
 		return;
 	}
