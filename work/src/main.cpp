@@ -497,6 +497,7 @@ int main() {
 
 		g_world->update();
 		glm::mat4 model;
+		glm::mat4 tempModel = model;
 		vector<Agent> *agents = g_world->getAgents();
 		for (int i = 0; i < agents->size(); i++) {
 			vec2 pos = (*agents)[i].getPosition();
@@ -541,17 +542,18 @@ int main() {
 
 
 
+		
+		//tree.show();
+		model = tempModel;
 		if(!tree.finishedGrowing){
 			tree.grow();
 		}
-		tree.show();
-
 		for (int i = 0; i < tree.branches.size(); i++) {
-			model = glm::mat4();
+			
 			Branch b = tree.branches[i];
 		if (b.parent != nullptr) {
-			glPushMatrix();
-
+			//glPushMatrix();
+			model = glm::mat4();
 			// ... Rotate branch
 			vec3 dir = tree.branches[i].parent->position - tree.branches[i].position;
 			vec3 target_dir = normalize( dir); // normalise the bones direction
@@ -559,18 +561,18 @@ int main() {
 			float rot_angle = acos((target_dir.x*z_axis.x) + (target_dir.y*z_axis.y) + (target_dir.z*z_axis.z)); //inverse of the dot product
 			model = glm::translate(model, glm::vec3(tree.branches[i].position.x, tree.branches[i].position.y, tree.branches[i].position.z));
 			//glTranslatef(tree.branches[i].position.x, tree.branches[i].position.y, tree.branches[i].position.z);
-
+			cout << tree.branches[i].position.x << ", "  << tree.branches[i].position.y << ", " << tree.branches[i].position.z << endl;
 			if( fabs(rot_angle) > 0) {
 				vec3 cross = vec3((target_dir.y*z_axis.z)-(target_dir.z*z_axis.y), (target_dir.z*z_axis.x)-(target_dir.x*z_axis.z), (target_dir.x*z_axis.y)-(target_dir.y*z_axis.x)); // cross product
 				vec3 rot_axis = normalize(cross); // normalise the cross product of the direction and staring vectors
 				float rotateAmount = -rot_angle;
-
-				model = glm::rotate(model, rotateAmount, glm::vec3(rot_axis.x, rot_axis.y, rot_axis.z) );
+				cout << rotateAmount << endl;
+				model = glm::rotate(model, glm::radians(rotateAmount), glm::vec3(rot_axis.x, rot_axis.y, rot_axis.z) );
 				//glRotatef( -rot_angle/math::pi()*180, rot_axis.x, rot_axis.y, rot_axis.z ); // rotate so the branch draws in right direction
 			}
-			renderCylinder(0.1, 0.1, tree.branches[i].length, 6, 6, false);
+			renderCylinder(1, 0.1, tree.branches[i].length, 6, 6, false);
 			//cgraCylinder(0.1,0.1, tree.branches[i].length, 6, 6, false);
-			
+			model = glm::mat4();
 		}
 	}
 
@@ -805,8 +807,8 @@ void renderSphere()
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
-		cout << sphereVAO << endl;
-		cout << vbo << endl;
+		// cout << sphereVAO << endl;
+		// cout << vbo << endl;
 	}
 
 	glBindVertexArray(sphereVAO);
@@ -862,7 +864,7 @@ void renderModel(unsigned int mod)
 		}
 
 		modelIndexCount[mod] = indices.size();
-		cout << modelIndexCount[mod] << endl;
+		//cout << modelIndexCount[mod] << endl;
 		glBindVertexArray(modelVAO[mod]);
 		glBindBuffer(GL_ARRAY_BUFFER, modelVBO);
 		glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(float), &data[0], GL_STATIC_DRAW);
@@ -1133,8 +1135,8 @@ void renderCylinder(float base_radius, float top_radius, float height, int slice
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, stride, (void*)(5 * sizeof(float)));
-		cout << cylinderVAO << endl;
-		cout << vbo << endl;
+		// cout << cylinderVAO << endl;
+		// cout << vbo << endl;
 	}
 
 	glBindVertexArray(cylinderVAO);
