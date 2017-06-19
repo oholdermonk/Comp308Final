@@ -524,7 +524,7 @@ int main() {
 			else {
 				pbrShader.setVec3("albedo", glm::vec3(1, 1, 1));
 			}
-			model = glm::rotate(model, -(*parkObjects)[i].getRotation(), glm::vec3(0, 1, 0));
+			model = glm::rotate(model, -(*parkObjects)[i].getRotation() + (float)math::pi() / 2.0f, glm::vec3(0, 1, 0));
 			pbrShader.setMat4("model", model);
 			renderModel(0);
 		}
