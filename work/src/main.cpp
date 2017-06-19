@@ -121,7 +121,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 	if (R_held) {
 		if (selectedItem >= g_world->getAgents()->size()) {
-			g_world->getParkObjects()->at(selectedItem- g_world->getAgents()->size()).changeRotation(xoffset);
+			g_world->getParkObjects()->at(selectedItem - g_world->getAgents()->size()).changeRotation(xoffset);
 		}
 		return;
 	}
@@ -498,7 +498,7 @@ int main() {
 				-0.5f,
 				pos.y
 			));
-			model = glm::rotate(model, -(*agents)[i].getRotation()+(float)math::pi()/2.0f, glm::vec3(0, 1, 0));
+			model = glm::rotate(model, -(*agents)[i].getRotation() + (float)math::pi() / 2.0f, glm::vec3(0, 1, 0));
 			if (i == selectedItem) {
 				pbrShader.setVec3("albedo", glm::vec3(1, 0, 0));
 			}
@@ -518,7 +518,7 @@ int main() {
 				0.0f,
 				pos.y
 			));
-			if (i+agents->size() == selectedItem) {
+			if (i + agents->size() == selectedItem) {
 				pbrShader.setVec3("albedo", glm::vec3(1, 0, 0));
 			}
 			else {
@@ -531,7 +531,7 @@ int main() {
 
 
 
-		if(!tree.finishedGrowing){
+		if (!tree.finishedGrowing) {
 			tree.grow();
 		}
 		tree.show();
@@ -539,30 +539,32 @@ int main() {
 		/*for (int i = 0; i < tree.branches.size(); i++) {
 			model = glm::mat4();
 			Branch b = tree.branches[i];
-		if (b.parent != nullptr) {
-			glPushMatrix();
+			if (b.parent != nullptr) {
+				glPushMatrix();
 
-			// ... Rotate branch
-			vec3 dir = tree.branches[i].parent->position - tree.branches[i].position;
-			vec3 target_dir = normalize( dir); // normalise the bones direction
-			vec3 z_axis = vec3(0,0,1); // the default direction of a bone
-			float rot_angle = acos((target_dir.x*z_axis.x) + (target_dir.y*z_axis.y) + (target_dir.z*z_axis.z)); //inverse of the dot product
-			model = glm::translate(model, glm::vec3(tree.branches[i].position.x, tree.branches[i].position.y, tree.branches[i].position.z));
-			//glTranslatef(tree.branches[i].position.x, tree.branches[i].position.y, tree.branches[i].position.z);
+				// ... Rotate branch
+				vec3 dir = tree.branches[i].parent->position - tree.branches[i].position;
+				vec3 target_dir = normalize(dir); // normalise the bones direction
+				vec3 z_axis = vec3(0, 0, 1); // the default direction of a bone
+				float rot_angle = acos((target_dir.x*z_axis.x) + (target_dir.y*z_axis.y) + (target_dir.z*z_axis.z)); //inverse of the dot product
+				model = glm::translate(model, glm::vec3(tree.branches[i].position.x, tree.branches[i].position.y, tree.branches[i].position.z));
+				//glTranslatef(tree.branches[i].position.x, tree.branches[i].position.y, tree.branches[i].position.z);
 
-			if( fabs(rot_angle) > 0) {
-				vec3 cross = vec3((target_dir.y*z_axis.z)-(target_dir.z*z_axis.y), (target_dir.z*z_axis.x)-(target_dir.x*z_axis.z), (target_dir.x*z_axis.y)-(target_dir.y*z_axis.x)); // cross product
-				vec3 rot_axis = normalize(cross); // normalise the cross product of the direction and staring vectors
-				float rotateAmount = -rot_angle;
+				if (fabs(rot_angle) > 0) {
+					vec3 cross = vec3((target_dir.y*z_axis.z) - (target_dir.z*z_axis.y), (target_dir.z*z_axis.x) - (target_dir.x*z_axis.z), (target_dir.x*z_axis.y) - (target_dir.y*z_axis.x)); // cross product
+					vec3 rot_axis = normalize(cross); // normalise the cross product of the direction and staring vectors
+					float rotateAmount = -rot_angle;
 
-				model = glm::rotate(model, rotateAmount, glm::vec3(rot_axis.x, rot_axis.y, rot_axis.z) );
-				//glRotatef( -rot_angle/math::pi()*180, rot_axis.x, rot_axis.y, rot_axis.z ); // rotate so the branch draws in right direction
+					model = glm::rotate(model, rotateAmount, glm::vec3(rot_axis.x, rot_axis.y, rot_axis.z));
+					//glRotatef( -rot_angle/math::pi()*180, rot_axis.x, rot_axis.y, rot_axis.z ); // rotate so the branch draws in right direction
+				}
+				renderCylinder(0.1, 0.1, tree.branches[i].length, 6, 6, false);
+				//cgraCylinder(0.1,0.1, tree.branches[i].length, 6, 6, false);
+
 			}
-			renderCylinder(0.1, 0.1, tree.branches[i].length, 6, 6, false);
-			//cgraCylinder(0.1,0.1, tree.branches[i].length, 6, 6, false);
-			
 		}
 	}*/
+
 
 
 
@@ -597,7 +599,7 @@ int main() {
 		// render light source (simply re-render sphere at light positions)
 		// this looks a bit off as we use the same shader, but it'll make their positions obvious and 
 		// keeps the codeprint small.
-		pbrShader.setVec3("albedo", glm::vec3(0.4f,0.8f,0.4f));
+		pbrShader.setVec3("albedo", glm::vec3(0.4f, 0.8f, 0.4f));
 		pbrShader.setFloat("metallic", 0.1f);
 		model = glm::mat4();
 		renderPlane();
@@ -676,6 +678,14 @@ void processInput(GLFWwindow *window)
 				g_world->removeAgent(selectedItem);
 			}
 			selectedItem = -1;
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+		selectedItem = -1;
+	}
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+		if (selectedItem > -1 && selectedItem < g_world->getAgents()->size()) {
+			(*g_world->getAgents())[selectedItem].setIsRandom(true);
 		}
 	}
 
