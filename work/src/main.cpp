@@ -123,7 +123,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 	if (R_held) {
 		if (selectedItem >= g_world->getAgents()->size()) {
-			g_world->getParkObjects()->at(selectedItem- g_world->getAgents()->size()).changeRotation(xoffset);
+			g_world->getParkObjects()->at(selectedItem - g_world->getAgents()->size()).changeRotation(xoffset);
 		}
 		return;
 	}
@@ -501,7 +501,7 @@ int main() {
 				-0.5f,
 				pos.y
 			));
-			model = glm::rotate(model, -(*agents)[i].getRotation()+(float)math::pi()/2.0f, glm::vec3(0, 1, 0));
+			model = glm::rotate(model, -(*agents)[i].getRotation() + (float)math::pi() / 2.0f, glm::vec3(0, 1, 0));
 			if (i == selectedItem) {
 				pbrShader.setVec3("albedo", glm::vec3(1, 0, 0));
 			}
@@ -529,7 +529,7 @@ int main() {
 				0.0f,
 				pos.y
 			));
-			if (i+agents->size() == selectedItem) {
+			if (i + agents->size() == selectedItem) {
 				pbrShader.setVec3("albedo", glm::vec3(1, 0, 0));
 			}
 			else {
@@ -542,6 +542,7 @@ int main() {
 
 
 
+<<<<<<< HEAD
 		
 		//tree.show();
 		model = glm::mat4();
@@ -638,7 +639,7 @@ int main() {
 		// render light source (simply re-render sphere at light positions)
 		// this looks a bit off as we use the same shader, but it'll make their positions obvious and 
 		// keeps the codeprint small.
-		pbrShader.setVec3("albedo", glm::vec3(0.4f,0.8f,0.4f));
+		pbrShader.setVec3("albedo", glm::vec3(0.4f, 0.8f, 0.4f));
 		pbrShader.setFloat("metallic", 0.1f);
 		model = glm::mat4();
 		renderPlane();
@@ -717,6 +718,14 @@ void processInput(GLFWwindow *window)
 				g_world->removeAgent(selectedItem);
 			}
 			selectedItem = -1;
+		}
+	}
+	if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+		selectedItem = -1;
+	}
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+		if (selectedItem > -1 && selectedItem < g_world->getAgents()->size()) {
+			(*g_world->getAgents())[selectedItem].setIsRandom(true);
 		}
 	}
 
