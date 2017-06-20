@@ -540,9 +540,6 @@ int main() {
 			renderModel(0);
 		}
 
-
-
-<<<<<<< HEAD
 		
 		//tree.show();
 		model = glm::mat4();
