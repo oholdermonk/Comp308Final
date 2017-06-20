@@ -32,7 +32,7 @@ in vec3 vPosition;
 
 uniform vec3 uSunPos;
 
-//Ray Sphere intersection 
+//Ray Sphere intersection to test where ray hits from the sun
 vec2 rsi(vec3 r0, vec3 rd, float sr) {
     // ray-sphere intersection that assumes
     // the sphere is centered at the origin.
@@ -48,7 +48,32 @@ vec2 rsi(vec3 r0, vec3 rd, float sr) {
     );
 }
 
-vec3 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAtmos, vec3 kRlh, float kMie, float shRlh, float shMie, float g) {
+
+/*
+    1. First calculate the amount of steps to calculate the Mie and Rayleigh scattering from where the 
+    primary ray from the sun towards the viewer (camera) intersects the atmosphere 
+    2. Then calculate the offset from the planet size to get the thickness of the atmosphere and how many steps through the
+    atmosphere is visible towards the viewer
+    3. Initialise a time counter and accumulators for the Mie and Rayleigh scattering and the depth accumulators for the ray
+    4. We then calculate the Rayleigh phase function which has the form PR(μ)=3/16π*(1+μ^2) where μ (mu) is the cosine of 
+    angle between the light ray and view ray
+    5. We also calculate the Mie phase function which has the form PM(μ)=3/8π*((1−g^2)(1+μ^2)/((2+g^2)(1+g^2−2gμ)^(3/2))) where
+    additionally to μ (mu) there is g which is the anisotropy of the particles or scattering direction
+    6. We then go through our set number of sample points along the ray and accumulate the optical depth for the primary ray, 
+    and for each of the set secondary rays we accumulate the amount of light at that point including attentuation
+    7. Finally we multiply the intensity of the sun by the Rayleigh Phase function by the total amount of rayleigh light 
+    accumulated by the scattering coeffecients calculated for the earth, and then add that to the intensity of the sun multiplied
+    by the Mie Phase by amount of Mie light scattered by the Mie scattering coefficient
+    8. This final value will be your final output color for a pixel.
+
+*/
+
+
+
+
+
+
+vec3 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rEarth, float rAtmos, vec3 kRlh, float kMie, float shRlh, float shMie, float g) {
     // Normalize the sun and view directions.
     pSun = normalize(pSun);
     r = normalize(r);
@@ -56,7 +81,7 @@ vec3 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
     // Calculate the step size of the primary ray.
     vec2 p = rsi(r0, r, rAtmos);
     if (p.x > p.y) return vec3(0,0,0);
-    p.y = min(p.y, rsi(r0, r, rPlanet).x);
+    p.y = min(p.y, rsi(r0, r, rEarth).x);
     float iStepSize = (p.y - p.x) / float(iSteps);
 
     // Initialize the primary ray time.
@@ -74,8 +99,8 @@ vec3 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
     float mu = dot(r, pSun);
     float mumu = mu * mu;
     float gg = g * g;
-    float pRlh = 3.0 / (16.0 * PI) * (1.0 + mumu);
-    float pMie = 3.0 / (8.0 * PI) * ((1.0 - gg) * (mumu + 1.0)) / (pow(1.0 + gg - 2.0 * mu * g, 1.5) * (2.0 + gg));
+    float RlhPhase = 3.0 / (16.0 * PI) * (1.0 + mumu);
+    float MiePhase = 3.0 / (8.0 * PI) * ((1.0 - gg) * (mumu + 1.0)) / (pow(1.0 + gg - 2.0 * mu * g, 1.5) * (2.0 + gg));
 
     // Sample the primary ray.
     for (int i = 0; i < iSteps; i++) {
@@ -84,15 +109,15 @@ vec3 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
         vec3 iPos = r0 + r * (iTime + iStepSize * 0.5);
 
         // Calculate the height of the sample.
-        float iHeight = length(iPos) - rPlanet;
+        float iHeight = length(iPos) - rEarth;
 
         // Calculate the optical depth of the Rayleigh and Mie scattering for this step.
-        float odStepRlh = exp(-iHeight / shRlh) * iStepSize;
-        float odStepMie = exp(-iHeight / shMie) * iStepSize;
+        float odSteRlhPhase = exp(-iHeight / shRlh) * iStepSize;
+        float odSteMiePhase = exp(-iHeight / shMie) * iStepSize;
 
         // Accumulate optical depth.
-        iOdRlh += odStepRlh;
-        iOdMie += odStepMie;
+        iOdRlh += odSteRlhPhase;
+        iOdMie += odSteMiePhase;
 
         // Calculate the step size of the secondary ray.
         float jStepSize = rsi(iPos, pSun, rAtmos).y / float(jSteps);
@@ -111,7 +136,7 @@ vec3 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
             vec3 jPos = iPos + pSun * (jTime + jStepSize * 0.5);
 
             // Calculate the height of the sample.
-            float jHeight = length(jPos) - rPlanet;
+            float jHeight = length(jPos) - rEarth;
 
             // Accumulate the optical depth.
             jOdRlh += exp(-jHeight / shRlh) * jStepSize;
@@ -125,8 +150,8 @@ vec3 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
         vec3 attn = exp(-(kMie * (iOdMie + jOdMie) + kRlh * (iOdRlh + jOdRlh)));
 
         // Accumulate scattering.
-        totalRlh += odStepRlh * attn;
-        totalMie += odStepMie * attn;
+        totalRlh += odSteRlhPhase * attn;
+        totalMie += odSteMiePhase * attn;
 
         // Increment the primary ray time.
         iTime += iStepSize;
@@ -134,7 +159,7 @@ vec3 atmosphere(vec3 r, vec3 r0, vec3 pSun, float iSun, float rPlanet, float rAt
     }
 
     // Calculate and return the final color.
-    return iSun * (pRlh * kRlh * totalRlh + pMie * kMie * totalMie);
+    return iSun * (RlhPhase * kRlh * totalRlh + MiePhase * kMie * totalMie);
 }
 
 void main() {
@@ -149,7 +174,7 @@ void main() {
         21e-6,                          // Mie scattering coefficient
         8e3,                            // Rayleigh scale height
         1.2e3,                          // Mie scale height
-        0.758                           // Mie preferred scattering direction
+        0.76                            // Mie preferred scattering direction
     );
 
     // Apply exposure.

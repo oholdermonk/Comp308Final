@@ -77,11 +77,12 @@ private:
 	void setObstacleToGrid(std::vector<cgra::vec2>, bool);
 	std::vector<cgra::vec2> aStarSearch(gridPos, gridPos, int);
 public:
-	void render();
 	void update();
 	void addAgent(Agent);
+	void removeAgent(int);
 	void create_lct();
 	void addObject(ParkObject);
+	void removeObject(int);
 	void init(float, float, float, float);
 	void create_grid(float = 0.1f);
 	vector<Agent>* getAgents();

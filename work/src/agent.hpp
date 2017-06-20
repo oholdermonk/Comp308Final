@@ -25,7 +25,6 @@ private:
 	int id;
 	AgentType agentType;
 	float radius;
-	void initModel();
 	float initRadius();
 	float rotation; // in radians
 	bool _needPath = false;
@@ -34,12 +33,10 @@ private:
 	bool _isRandom = true;
 	std::vector<cgra::vec2> path;
 	cgra::vec2 rotateVec2(float, float, float);
-	std::vector<float> model;
-	//static std::map<AgentType, float*> modelMap = std::map<AgentType, float*>();
 public:
 	Agent(AgentType);
 	float getRadius();
-	void render();
+	float getRotation();
 	void update(cgra::vec2);
 	void updateKallmann(cgra::vec2);
 	cgra::vec2 getPosition();
@@ -59,6 +56,4 @@ public:
 	bool needTarget();
 	void setIsRandom(bool);
 	bool isRandom();
-	std::vector<float> getModel();
-	//static void initModelMap();
 };

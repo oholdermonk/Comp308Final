@@ -13,7 +13,6 @@
 
 #include "cgra_math.hpp"
 #include "parkobject.hpp"
-#include "opengl.hpp"
 #include "geometry.hpp"
 using namespace std;
 using namespace cgra;
@@ -23,7 +22,6 @@ ParkObject::ParkObject(ParkObjectType _parkObjectType, vec2 _position) {
 	objType = _parkObjectType;
 	dimensions = initDimensions();
 	position = _position;
-	initModel();
 }
 
 GsPolygon ParkObject::getOutline() {
@@ -37,30 +35,20 @@ GsPolygon ParkObject::getOutline() {
 
 vec2 ParkObject::initDimensions() {
 	switch (objType) {
-	case bench: return vec2(1, 5);
-	case tree: return vec2(1, 1);
-	case fence: return vec2(0.1, 3);
+	case bench: return vec2(2.4, 1);
+	case tree: return vec2(0.5, 0.5);
+	//case fence: return vec2(0.1, 3);
 	}
 	return vec2(0, 0);
 }
 
-void ParkObject::render() {
-	glPushMatrix();
-	glColor3f(0, 0, 1);
-	if (objType == tree) { glColor3f(0, 1, 0); }
-	glTranslatef(position.x, position.y, 0);
-	glRotatef(degrees(rotation), 0, 0, 1);
-	glBegin(GL_QUADS);
-	glVertex3f(-dimensions.x / 2, -dimensions.y / 2, 0);
-	glVertex3f(-dimensions.x / 2, dimensions.y / 2, 0);
-	glVertex3f(dimensions.x / 2, dimensions.y / 2, 0);
-	glVertex3f(dimensions.x / 2, -dimensions.y / 2, 0);
-	glEnd();
-	glPopMatrix();
-}
-
 void ParkObject::setID(int _id) {
 	id = _id;
+}
+
+int ParkObject::getID()
+{
+	return id;
 }
 
 vector<vec2> ParkObject::getVertices() {
@@ -87,26 +75,10 @@ vec2 ParkObject::getPosition() {
 	return position;
 }
 
-void ParkObject::initModel() {
-	string filename;
-	switch (objType) {
-	case bench:
-		filename = "./work/res/models/Bench_LowRes.obj";
-		break;
-	case tree:
-		filename = "";
-		break;
-	case fence:
-		filename = "";
-		break;
-	}
-	model = Geometry::getModel(filename);
-}
-
-vector<float> ParkObject::getModel() {
-	return model;
-}
-
 void ParkObject::setPosition(vec2 _position) {
 	position = _position;
+}
+
+float ParkObject::getRotation() {
+	return rotation;
 }

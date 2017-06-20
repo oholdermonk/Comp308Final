@@ -40,6 +40,8 @@ void renderCylinder(float base_radius, float top_radius, float height, int slice
 
 World *g_world = nullptr;
 std::vector<mesh> geometryList;
+std::vector<Tree> trees;
+std::vector<glm::vec2> treePos;
 
 
 std::vector<float> humanModel;
@@ -67,6 +69,7 @@ int selectedItem = -1;
 bool R_held = false;
 bool addingAgent = false;
 bool addingBench = false;
+bool addingTree = false;
 float sunAngle = 90;
 float sunYAngle = 0.0f;
 
@@ -120,7 +123,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 
 	if (R_held) {
 		if (selectedItem >= g_world->getAgents()->size()) {
-			g_world->getParkObjects()->at(selectedItem).changeRotation(xoffset);
+			g_world->getParkObjects()->at(selectedItem- g_world->getAgents()->size()).changeRotation(xoffset);
 		}
 		return;
 	}
@@ -145,9 +148,15 @@ void processMouseClick() {
 		g_world->addObject(a);
 		return;
 	}
+	else if (addingTree) {
+		trees.push_back(Tree());
+		treePos.push_back(glm::vec2(ground.x,ground.y));
+		return;
+	}
 	vector<Agent> *agents = g_world->getAgents();
 	if (selectedItem == -1 || selectedItem >= agents->size()) {
-		float smallestDist = 3.402823466e+38F;
+		float maxDist = 1;
+		float smallestDist = maxDist;
 		for (int i = 0; i < agents->size(); i++) {
 			float dist = length((*agents)[i].getPosition() - ground);
 			if (dist < smallestDist) {
@@ -162,6 +171,9 @@ void processMouseClick() {
 				smallestDist = dist;
 				selectedItem = i + agents->size();
 			}
+		}
+		if (smallestDist == maxDist) {
+			selectedItem = -1;
 		}
 	}
 	else {//agent already selected
@@ -268,7 +280,7 @@ int main() {
 	//Physical Shader
 	Shader pbrShader("./work/res/shaders/physShdr.vert", "./work/res/shaders/physShdr.frag");
 	//Equi Rectangular to Cube map shader
-	Shader equirectangularToCubemapShader("./work/res/shaders/cubeMapShdr.vert", "./work/res/shaders/equiRectToCubeMapShdr.frag");
+	//Shader equirectangularToCubemapShader("./work/res/shaders/cubeMapShdr.vert", "./work/res/shaders/equiRectToCubeMapShdr.frag");
 	//Irradiance Shader
 	Shader irradianceShader("./work/res/shaders/cubeMapShdr.vert", "./work/res/shaders/irradianceConvultion.frag");
 	//Background/Sky Shader
@@ -323,6 +335,7 @@ int main() {
 
 	geometryList.push_back(mesh("./work/res/models/park_bench.obj"));
 	geometryList.push_back(mesh("./work/res/models/person.obj"));
+	geometryList.push_back(mesh("./work/res/models/branch.obj"));
 
 
 
@@ -401,7 +414,7 @@ int main() {
 
 
 
-	Tree tree = Tree();
+	
 
 	glm::vec3 sunPos = glm::vec3(0.1f, 0.1f, -1.0f);
 
@@ -422,7 +435,7 @@ int main() {
 			skyShader.setMat4("projection", captureProjection);
 			skyShader.setVec3("vPosition", glm::vec3(0.0f, 0.0f, 0.0f)); // view position
 			sunPos = glm::vec3(0.1f, sin(glfwGetTime() / 10), cos(glfwGetTime() / 10));
-
+			//cout << sunPos.x<< ", " << sunPos.y<< ", " << sunPos.z << endl;
 			//glm::vec3 sunPos = glm::vec3(0.1f, 0.1f, -1.0f);
 			skyShader.setVec3("uSunPos", sunPos);
 
@@ -467,25 +480,6 @@ int main() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		//Select shader program to use
 		pbrShader.use();
 
@@ -497,22 +491,34 @@ int main() {
 
 		g_world->update();
 		glm::mat4 model;
-		glm::mat4 tempModel = model;
+
 		vector<Agent> *agents = g_world->getAgents();
 		for (int i = 0; i < agents->size(); i++) {
 			vec2 pos = (*agents)[i].getPosition();
 			model = glm::mat4();
 			model = glm::translate(model, glm::vec3(
 				pos.x,
-				-2.0f,
+				-0.5f,
 				pos.y
 			));
+			model = glm::rotate(model, -(*agents)[i].getRotation()+(float)math::pi()/2.0f, glm::vec3(0, 1, 0));
+			if (i == selectedItem) {
+				pbrShader.setVec3("albedo", glm::vec3(1, 0, 0));
+			}
+			else {
+				pbrShader.setVec3("albedo", glm::vec3(1, 1, 1));
+			}
 			pbrShader.setMat4("model", model);
-			//renderSphere();
-			model = glm::scale(model, glm::vec3(0.001f, 0.001f, 0.001f));
 			renderModel(1);
 		}
-
+		// cout << "agents model transform" << endl;
+		// for(int y = 0; y < 4; y++){
+		// 		for(int x = 0; x< 4; x++){
+		// 			cout << model[x][y] << ",";
+		// 		}
+		// 		cout << endl;
+		// 	}
+		// 	cout << endl << endl;
 
 		vector<ParkObject> *parkObjects = g_world->getParkObjects();
 		for (int i = 0; i < parkObjects->size(); i++) {
@@ -520,22 +526,16 @@ int main() {
 			model = glm::mat4();
 			model = glm::translate(model, glm::vec3(
 				pos.x,
-				1.0f,
+				0.0f,
 				pos.y
 			));
-			pbrShader.setMat4("model", model);
-			renderModel(0);
-		}
-
-		vector<Agent> *agentsList = g_world->getAgents();
-		for (int i = 0; i < agentsList->size(); i++) {
-			vec2 pos = (*agentsList)[i].getPosition();
-			model = glm::mat4();
-			model = glm::translate(model, glm::vec3(
-				pos.x,
-				1.0f,
-				pos.y
-			));
+			if (i+agents->size() == selectedItem) {
+				pbrShader.setVec3("albedo", glm::vec3(1, 0, 0));
+			}
+			else {
+				pbrShader.setVec3("albedo", glm::vec3(1, 1, 1));
+			}
+			model = glm::rotate(model, -(*parkObjects)[i].getRotation(), glm::vec3(0, 1, 0));
 			pbrShader.setMat4("model", model);
 			renderModel(0);
 		}
@@ -544,40 +544,69 @@ int main() {
 
 		
 		//tree.show();
-		model = tempModel;
-		if(!tree.finishedGrowing){
-			tree.grow();
-		}
-		for (int i = 0; i < tree.branches.size(); i++) {
+		model = glm::mat4();
+		pbrShader.setMat4("model", model);
+		int treeNum = 0;
+		for(Tree &tree : trees){
 			
-			Branch b = tree.branches[i];
-		if (b.parent != nullptr) {
-			//glPushMatrix();
-			model = glm::mat4();
-			// ... Rotate branch
-			vec3 dir = tree.branches[i].parent->position - tree.branches[i].position;
-			vec3 target_dir = normalize( dir); // normalise the bones direction
-			vec3 z_axis = vec3(0,0,1); // the default direction of a bone
-			float rot_angle = acos((target_dir.x*z_axis.x) + (target_dir.y*z_axis.y) + (target_dir.z*z_axis.z)); //inverse of the dot product
-			model = glm::translate(model, glm::vec3(tree.branches[i].position.x, tree.branches[i].position.y, tree.branches[i].position.z));
-			//glTranslatef(tree.branches[i].position.x, tree.branches[i].position.y, tree.branches[i].position.z);
-			cout << tree.branches[i].position.x << ", "  << tree.branches[i].position.y << ", " << tree.branches[i].position.z << endl;
-			if( fabs(rot_angle) > 0) {
-				vec3 cross = vec3((target_dir.y*z_axis.z)-(target_dir.z*z_axis.y), (target_dir.z*z_axis.x)-(target_dir.x*z_axis.z), (target_dir.x*z_axis.y)-(target_dir.y*z_axis.x)); // cross product
-				vec3 rot_axis = normalize(cross); // normalise the cross product of the direction and staring vectors
-				float rotateAmount = -rot_angle;
-				cout << rotateAmount << endl;
-				model = glm::rotate(model, glm::radians(rotateAmount), glm::vec3(rot_axis.x, rot_axis.y, rot_axis.z) );
-				//glRotatef( -rot_angle/math::pi()*180, rot_axis.x, rot_axis.y, rot_axis.z ); // rotate so the branch draws in right direction
+			if(!tree.finishedGrowing){
+				tree.grow();
 			}
-			renderCylinder(1, 0.1, tree.branches[i].length, 6, 6, false);
-			//cgraCylinder(0.1,0.1, tree.branches[i].length, 6, 6, false);
-			model = glm::mat4();
+			
+			for (int i = 0; i < tree.branches.size()/10; i++) {
+				//model = glm::scale(model, glm::vec3(0.0f,tree.branches[i].length,0.0f));
+				model = glm::translate(model, glm::vec3(treePos[treeNum].x,0.0f,treePos[treeNum].y));
+				Branch b = tree.branches[i];
+				if (b.parent != nullptr) {
+					//glPushMatrix();
+					
+					// ... Rotate branch
+					vec3 dir = tree.branches[i].parent->position - tree.branches[i].position;
+					vec3 target_dir = normalize( dir); // normalise the bones direction
+					vec3 z_axis = vec3(0,0,1); // the default direction of a bone
+					float rot_angle = acos((target_dir.x*z_axis.x) + (target_dir.y*z_axis.y) + (target_dir.z*z_axis.z)); //inverse of the dot product
+					model = glm::translate(model, glm::vec3(tree.branches[i].position.x/10, tree.branches[i].position.y/10, tree.branches[i].position.z/10));
+					//glTranslatef(tree.branches[i].position.x, tree.branches[i].position.y, tree.branches[i].position.z);
+					//cout << tree.branches[i].position.x << ", "  << tree.branches[i].position.y << ", " << tree.branches[i].position.z << endl;
+					if( fabs(rot_angle) > 0) {
+						vec3 cross = vec3((target_dir.y*z_axis.z)-(target_dir.z*z_axis.y), (target_dir.z*z_axis.x)-(target_dir.x*z_axis.z), (target_dir.x*z_axis.y)-(target_dir.y*z_axis.x)); // cross product
+						vec3 rot_axis = normalize(cross); // normalise the cross product of the direction and staring vectors
+						float rotateAmount = -rot_angle*math::pi()*180.0f;
+						//cout << rotateAmount << endl;
+						model = glm::rotate(model, glm::radians(rotateAmount/10), glm::vec3(rot_axis.x, rot_axis.y, rot_axis.z) );
+						//model = glm::rotate(model, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f) );
+						//glRotatef( -rot_angle/math::pi()*180, rot_axis.x, rot_axis.y, rot_axis.z ); // rotate so the branch draws in right direction
+					}
+					
+					// cout << "branch " << i << " matrix transform" << endl;
+					// for(int y = 0; y < 4; y++){
+					// 	for(int x = 0; x< 4; x++){
+					// 		cout << model[x][y] << ",";
+					// 	}
+					// 	cout << endl;
+					// }
+					// cout << endl << endl;
+
+					
+					pbrShader.setMat4("model", model);
+					
+					renderCylinder(0.1, 0.1, tree.branches[i].length/10, 6, 6, false);
+					//renderSphere();
+
+					//renderModel(2);
+					//cgraCylinder(0.1,0.1, tree.branches[i].length, 6, 6, false);
+					model = glm::mat4();
+					pbrShader.setMat4("model", model);
+				}
+			}
+			treeNum++;
+
 		}
-	}
+			
 
 
-
+	model = glm::mat4();
+		pbrShader.setMat4("model", model);
 
 
 
@@ -674,34 +703,27 @@ void processInput(GLFWwindow *window)
 		sunYAngle++;
 	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
 		sunYAngle--;
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
-		R_held = true;
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_RELEASE)
-		R_held = false;
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
 		animating = !animating;
 	}
 	if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
 		selectedItem = -1;
-	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-		addingAgent = true;
-	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE)
-		addingAgent = false;
-	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-		addingBench = true;
-	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_RELEASE)
-		addingBench = false;
 	if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
 		if (selectedItem > -1) {
 			if (selectedItem >= g_world->getAgents()->size()) {
-				g_world->getParkObjects()->erase(g_world->getParkObjects()->begin() + (selectedItem - g_world->getAgents()->size()));
+				g_world->removeObject(selectedItem - g_world->getAgents()->size());
 			}
 			else {
-				g_world->getAgents()->erase(g_world->getAgents()->begin() + selectedItem);
+				g_world->removeAgent(selectedItem);
 			}
 			selectedItem = -1;
 		}
 	}
+
+	R_held = (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS);
+	addingAgent = (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS);
+	addingBench = (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS);
+	addingTree = (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

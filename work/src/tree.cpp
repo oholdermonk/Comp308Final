@@ -136,7 +136,7 @@ public: void show() {
 		//	renderCylinder(0.1, 0.1, branches[i].length, 6, 6, false);
 			cgraCylinder(0.1,0.1, branches[i].length, 6, 6, false);
 			glPopMatrix();
-			glPopMatrix();
+			
 		}
 	}
 }
